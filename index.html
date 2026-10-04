@@ -121,7 +121,25 @@ ul.log li{border-color:rgba(255,255,255,.16)}
 .itemrow{border-color:rgba(255,255,255,.18)}
 .itemrow button{color:#ffb0a0}
 footer{text-shadow:0 1px 6px #000}
-@media(prefers-reduced-transparency:reduce){.card,.status,details.toolbox,nav,nav button,input,select,textarea{backdrop-filter:none;-webkit-backdrop-filter:none}}
+@media(prefers-reduced-transparency:reduce){main,.card,.status,details.toolbox,nav,nav button,input,select,textarea{backdrop-filter:none;-webkit-backdrop-filter:none}}
+body{padding-left:78px}
+header{max-width:1120px;margin:0 auto;padding:24px 24px 12px}
+main{max-width:1120px;min-height:calc(100vh - 190px);margin:0 auto;padding:22px 28px 90px;background:rgba(10,16,15,.3);border:1px solid rgba(255,255,255,.16);border-radius:20px;box-shadow:0 16px 48px rgba(0,0,0,.2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+nav{position:fixed;inset:0 auto 0 0;width:78px;height:100vh;height:100dvh;flex-direction:column;align-items:center;justify-content:flex-start;gap:12px;overflow-y:auto;overflow-x:hidden;padding:18px 10px;background:rgba(10,16,15,.78);border-right:1px solid rgba(255,255,255,.18);border-bottom:0}
+nav button{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;padding:0;border-radius:14px;font-size:23px;line-height:1}
+nav button:hover{background:rgba(255,255,255,.18)}
+nav button:focus-visible{outline:3px solid #f3bd7d;outline-offset:3px}
+nav button.on{background:rgba(181,112,57,.82);border-color:rgba(255,220,175,.55)}
+footer{max-width:1120px;margin:0 auto}
+@media(max-width:600px){
+ body{padding-left:62px}
+ header{padding:18px 12px 10px}
+ h1{font-size:48px}
+ nav{width:62px;padding:14px 7px;gap:10px}
+ nav button{flex-basis:44px;width:44px;height:44px;border-radius:12px;font-size:21px}
+ main{min-height:calc(100vh - 160px);padding:16px 12px 70px;border-radius:14px}
+ footer{padding:10px 12px 24px}
+}
 </style>
 </head>
 <body data-view="home">
@@ -129,12 +147,12 @@ footer{text-shadow:0 1px 6px #000}
   <h1>Dwarf</h1>
   <p class="sub">Guía virtual del viaje a casa</p>
 </header>
-<nav>
-  <button data-v="home">Inicio</button>
-  <button data-v="create">⚒️ Personaje</button>
-  <button data-v="turn">🗺️ Turnos</button>
-  <button data-v="sheet">📜 Hoja</button>
-  <button data-v="log">📖 Bitácora</button>
+<nav aria-label="Navegación principal">
+  <button data-v="home" aria-label="Inicio" title="Inicio">🏠</button>
+  <button data-v="create" aria-label="Personaje" title="Personaje">⚒️</button>
+  <button data-v="turn" aria-label="Turnos" title="Turnos">🗺️</button>
+  <button data-v="sheet" aria-label="Hoja" title="Hoja">📜</button>
+  <button data-v="log" aria-label="Bitácora" title="Bitácora">📖</button>
 </nav>
 <main id="app"></main>
 <footer>DWARF © Tavern Lore. Publicado bajo la Licencia de Terceros de MÖRK BORG. Guía de ayuda no oficial para uso personal; necesitas el manual del juego.</footer>
@@ -810,7 +828,7 @@ function logView(m){m.innerHTML=`<div class="card"><h3>Bitácora</h3><p class="h
  $('#dl').onclick=()=>download('dwarf-bitacora.txt',S.log.map(l=>`Día ${l.d} | ${l.t} | ${l.x}`).join('\n'),'text/plain');
  $('#cl').onclick=()=>{if(confirm('¿Borrar la bitácora?')){S.log=[];save();logView(m);}};}
 function download(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();}
-function render(){document.body.dataset.view=S.view;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));const m=$('#app');
+function render(){document.body.dataset.view=S.view;document.querySelectorAll('nav button').forEach(b=>{const active=b.dataset.v===S.view;b.classList.toggle('on',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});const m=$('#app');
  if(S.view==='create'){m.innerHTML='<div id="status" class="status"></div><div id="stage"></div>';renderStatus();if(CURS.create)return replay(CURS.create);if(S.char&&S.char.created)return createdSummary();return createIntro();}
  if(S.view==='turn'){m.innerHTML=`<div id="status" class="status"></div><div id="stage"></div>${toolsHTML()}<div class="card dark"><h4>Últimas tiradas</h4><ul class="log" id="recent"></ul></div>`;bindTools();renderStatus();
   if(!S.char||!S.char.created||!S.turn)return turnForm();if(CURS.turn)return replay(CURS.turn);return resumeTurn();}
