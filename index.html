@@ -82,9 +82,49 @@ ol.proc{margin:6px 0;padding-left:22px}
 .itemrow{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:4px 0}
 .itemrow button{font:inherit;border:0;background:none;color:var(--bad);font-size:18px;cursor:pointer}
 footer{text-align:center;color:var(--mut);font-size:13px;padding:10px 16px 30px}
+:root{--bg:#101614;--bg2:rgba(13,20,19,.72);--card:rgba(18,27,25,.72);--card2:rgba(255,255,255,.12);--ink:#f4efe4;--ink2:#ded6c8;--acc:#e7ad68;--acc2:#bd8248;--line:rgba(255,255,255,.23);--ok:#8dcc91;--bad:#ff9c8a;--txt:#f4efe4;--mut:#d0c9bb;--hi:rgba(231,173,104,.22)}
+body{position:relative;isolation:isolate;background:#101614}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("FONDO_BOSQUE.jpeg") center/cover no-repeat;transition:background-image .3s ease}
+body[data-view="create"]::before{background-image:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("FONDO_HERRERIA.jpeg")}
+header{padding-top:24px}
+h1{color:#fff6e6;text-shadow:0 3px 18px rgba(0,0,0,.8),0 1px 2px #000}
+.sub{color:#f1e8d7;text-shadow:0 1px 8px #000}
+nav{background:rgba(12,18,17,.58);border-bottom:1px solid rgba(255,255,255,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+nav button{background:rgba(255,255,255,.09);color:var(--txt);border-color:rgba(255,255,255,.24);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+nav button.on{background:rgba(181,112,57,.82);border-color:rgba(255,220,175,.55);box-shadow:0 4px 18px rgba(0,0,0,.22)}
+main{min-height:55vh}
+.card,.status,details.toolbox{background:rgba(16,24,22,.68);color:var(--ink);border:1px solid rgba(255,255,255,.22);box-shadow:0 12px 36px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.12);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.card{border-radius:16px}
+.card.dark{background:rgba(10,16,15,.72);color:var(--txt);border-color:rgba(255,255,255,.2)}
+.card h3{color:#f3bd7d;text-shadow:0 2px 12px rgba(0,0,0,.3)}
+.tbl{background:rgba(255,255,255,.12);color:#f6d8ad;border:1px solid rgba(255,255,255,.16)}
+.hint,.grid label{color:#ded6c8}
+input,select,textarea{background:rgba(255,255,255,.12);color:#fff8ec;border-color:rgba(255,255,255,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+input::placeholder,textarea::placeholder{color:rgba(255,248,236,.62)}
+select option{background:#19211f;color:#f4efe4}
+.btn{background:rgba(177,101,49,.9);box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.btn.ghost{background:rgba(255,255,255,.06);color:#f4c58e;border-color:rgba(244,197,142,.62)}
+.btn.alt{background:rgba(189,130,72,.9)}
+table.t td{border-color:rgba(255,255,255,.16)}
+table.t td:first-child{color:#f3bd7d}
+table.t tr.hi{background:var(--hi)}
+.warn,.err{color:#ffb0a0}
+.grid label.chk{color:var(--ink)}
+.status .sname,details.toolbox summary{color:#f3d3a7}
+.pill{background:rgba(255,255,255,.11)}
+.pill button,.tools button{background:rgba(255,255,255,.14);color:var(--txt);border:1px solid rgba(255,255,255,.2)}
+.flag{background:rgba(146,47,35,.86)}
+.flag.eat{background:rgba(189,130,72,.9)}
+.mods,ul.log li small,footer{color:#d0c9bb}
+ul.log li{border-color:rgba(255,255,255,.16)}
+.hp{background:rgba(255,255,255,.25)}
+.itemrow{border-color:rgba(255,255,255,.18)}
+.itemrow button{color:#ffb0a0}
+footer{text-shadow:0 1px 6px #000}
+@media(prefers-reduced-transparency:reduce){.card,.status,details.toolbox,nav,nav button,input,select,textarea{backdrop-filter:none;-webkit-backdrop-filter:none}}
 </style>
 </head>
-<body>
+<body data-view="home">
 <header>
   <h1>Dwarf</h1>
   <p class="sub">Guía virtual del viaje a casa</p>
@@ -770,7 +810,7 @@ function logView(m){m.innerHTML=`<div class="card"><h3>Bitácora</h3><p class="h
  $('#dl').onclick=()=>download('dwarf-bitacora.txt',S.log.map(l=>`Día ${l.d} | ${l.t} | ${l.x}`).join('\n'),'text/plain');
  $('#cl').onclick=()=>{if(confirm('¿Borrar la bitácora?')){S.log=[];save();logView(m);}};}
 function download(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();}
-function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));const m=$('#app');
+function render(){document.body.dataset.view=S.view;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));const m=$('#app');
  if(S.view==='create'){m.innerHTML='<div id="status" class="status"></div><div id="stage"></div>';renderStatus();if(CURS.create)return replay(CURS.create);if(S.char&&S.char.created)return createdSummary();return createIntro();}
  if(S.view==='turn'){m.innerHTML=`<div id="status" class="status"></div><div id="stage"></div>${toolsHTML()}<div class="card dark"><h4>Últimas tiradas</h4><ul class="log" id="recent"></ul></div>`;bindTools();renderStatus();
   if(!S.char||!S.char.created||!S.turn)return turnForm();if(CURS.turn)return replay(CURS.turn);return resumeTurn();}
