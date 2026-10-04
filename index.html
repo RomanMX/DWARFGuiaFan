@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DWARF · Guía Virtual</title>
+<meta name="description" content="Guía virtual para jugar DWARF, el juego de rol solitario de Tavern Lore: creación de personaje y guía de turnos paso a paso.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#15100c;--bg2:#211912;--card:#f1e4c6;--card2:#e4d0a6;--ink:#2a1f16;--ink2:#5b4632;--acc:#9e2f1e;--acc2:#b9771f;--line:#c9b48a;--ok:#2f6b3a;--bad:#8a2316;--txt:#eadfca;--mut:#a8977c;--hi:#f5cf7c}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:radial-gradient(ellipse at top,#2a1f16 0%,var(--bg) 60%) fixed,var(--bg);color:var(--txt);font-family:'EB Garamond',Georgia,serif;font-size:18px;line-height:1.45}
+header{padding:18px 16px 6px;text-align:center}
+h1{font-family:'UnifrakturMaguntia',serif;font-weight:400;font-size:58px;margin:0;color:var(--card);letter-spacing:3px;text-shadow:0 3px 0 #000}
+.sub{color:var(--mut);margin:0;font-style:italic}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;position:sticky;top:0;background:rgba(21,16,12,.96);z-index:10;border-bottom:1px solid #3a2e23;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;font:inherit;font-size:16px;background:var(--bg2);color:var(--txt);border:1px solid #4a3b2d;border-radius:20px;padding:6px 14px;cursor:pointer}
+nav button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+main{max-width:760px;margin:0 auto;padding:12px 16px 90px}
+.card{background:var(--card);color:var(--ink);border-radius:12px;padding:16px;box-shadow:0 6px 22px rgba(0,0,0,.45);border:1px solid var(--line);margin-bottom:14px}
+.card.ok{border-left:7px solid var(--ok)}.card.bad{border-left:7px solid var(--bad)}
+.card.dark{background:var(--bg2);color:var(--txt);border-color:#3a2e23}
+.card h3{font-family:'UnifrakturMaguntia',serif;font-weight:400;font-size:28px;margin:6px 0 8px;color:var(--acc);line-height:1.15}
+.card h4{margin:0 0 6px;font-size:18px}
+.tbl{font-size:14px;background:var(--card2);color:var(--ink2);border-radius:6px;padding:3px 9px;display:inline-block}
+.dice{font-size:20px;margin:12px 0 8px}
+.hint{font-size:15px;color:var(--ink2);font-style:italic}
+.res{font-size:20px;margin:6px 0}.res b{font-size:34px;color:var(--acc);vertical-align:-3px}
+.big{font-size:22px;font-weight:600;margin:6px 0}
+.txt p{margin:6px 0}
+.row{display:flex;gap:8px;align-items:stretch}
+input,select,textarea{font:inherit;font-size:17px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fffaf0;color:var(--ink);width:100%}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
+.row input{flex:1;font-size:22px;text-align:center}
+.btn{font:inherit;font-weight:600;font-size:17px;background:var(--acc);color:#fff;border:0;border-radius:9px;padding:12px 14px;cursor:pointer;text-align:center}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--acc);border:1.5px solid var(--acc)}
+.btn.alt{background:var(--acc2)}
+.btn.small{font-size:15px;padding:8px 10px}
+#auto{width:100%;margin-top:8px}
+.choices{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+table.t{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0}
+table.t td{border-bottom:1px solid var(--line);padding:4px 6px;vertical-align:top}
+table.t td:first-child{width:3.6em;font-weight:700;color:var(--acc);white-space:nowrap}
+table.t tr.hi{background:var(--hi)}
+.warn{color:var(--bad);font-weight:600}
+.err{color:var(--bad);min-height:1.2em;font-weight:600;margin-top:6px}
+.opts label{display:flex;gap:8px;align-items:center;font-size:16px;margin:4px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid label{display:flex;flex-direction:column;font-size:15px;color:var(--ink2);gap:3px}
+.grid label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink)}
+.grid .wide{grid-column:1/-1}
+.status{background:var(--bg2);border:1px solid #3a2e23;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:16px}
+.status:empty{display:none}
+.sname{font-weight:700;color:var(--card);margin-bottom:6px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:4px;background:#2f251c;border-radius:20px;padding:2px 4px 2px 9px}
+.pill button{font:inherit;width:28px;height:28px;border-radius:50%;border:0;background:#4a3b2d;color:#fff;cursor:pointer;line-height:1}
+.pill b{min-width:2.2em;text-align:center}
+.flags{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
+.flag{background:var(--bad);color:#fff;border-radius:6px;padding:1px 8px;font-size:14px}
+.flag.eat{background:var(--acc2);border:0;font:inherit;font-size:14px;cursor:pointer}
+.mods{margin-top:6px;color:var(--mut);font-size:15px}
+details.toolbox{background:var(--bg2);border:1px solid #3a2e23;border-radius:12px;padding:10px 12px;margin-bottom:14px}
+details.toolbox summary{cursor:pointer;font-weight:700;color:var(--card)}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.tools button{font:inherit;font-size:15px;background:#2f251c;color:var(--txt);border:1px solid #4a3b2d;border-radius:8px;padding:9px 6px;cursor:pointer}
+ul.log{list-style:none;margin:0;padding:0;font-size:15px}
+ul.log li{border-bottom:1px solid #3a2e23;padding:5px 0}
+ul.log li small{color:var(--mut)}
+.card ul.log li{border-color:var(--line)}
+.card ul.log li small{color:var(--ink2)}
+.enemy{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:4px 0;font-size:16px}
+.hp{flex:1;height:10px;background:#d6c39b;border-radius:5px;overflow:hidden;max-width:160px}
+.hp i{display:block;height:100%;background:var(--bad)}
+.dead{opacity:.5;text-decoration:line-through}
+ol.proc{margin:6px 0;padding-left:22px}
+.sheet td{padding:3px 6px}
+.itemrow{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:4px 0}
+.itemrow button{font:inherit;border:0;background:none;color:var(--bad);font-size:18px;cursor:pointer}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:10px 16px 30px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Dwarf</h1>
+  <p class="sub">Guía virtual del viaje a casa</p>
+</header>
+<nav>
+  <button data-v="home">Inicio</button>
+  <button data-v="create">⚒️ Personaje</button>
+  <button data-v="turn">🗺️ Turnos</button>
+  <button data-v="sheet">📜 Hoja</button>
+  <button data-v="log">📖 Bitácora</button>
+</nav>
+<main id="app"></main>
+<footer>DWARF © Tavern Lore. Publicado bajo la Licencia de Terceros de MÖRK BORG. Guía de ayuda no oficial para uso personal; necesitas el manual del juego.</footer>
+
+<script>
+'use strict';
+/* ================= UTILIDADES ================= */
+const KEY='dwarf-guia-v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>(n>=0?'+':'')+n;
+const rnd=s=>1+Math.floor(Math.random()*s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const norm=d=>/^d/.test(d)?'1'+d:d;
+
+/* ================= DATOS DE LAS TABLAS ================= */
+const BG=['Tu clan viajó lejos para una guerra. Te dieron por muerto (o te abandonaron). Despiertas en un campo de batalla vacío.',
+'Tu último recuerdo es emborracharte en la taberna. Despiertas desnudo en una cueva sin saber dónde estás.',
+'Eras parte de una embajada de paz con los Elfos. Os emboscaron; eres el único superviviente, perdido en tierra extraña.',
+'Eres huérfano, criado en tierra extranjera. Quieres saber de dónde vienes y cuál es tu clan.',
+'Fuiste exiliado de tu clan hace años. Acabas de saber de una amenaza contra tu tierra: debes volver a advertirles.',
+'Eras parte de una expedición minera. Tras un desastre, llevas los huesos de tus amigos a casa para que descansen en las Montañas.'];
+const BG_SHORT=['Campo de batalla','Resaca en la cueva (desnudo)','Embajada emboscada','Huérfano','Exiliado','Expedición minera'];
+const FIRST=['Von','Torv','Baal','Dev','Jorma','Dorin','Zeb','Scully','Jan','Barik','Skor','Ripley','Helja','Korg','Corvin','Bev','Grif','Brin','Zora','Tor'];
+const L1=['Oaken','Ale','Eagle','Stone','Iron','Hammer'];
+const L2=['Fist','Smith','Shield','Born','Crusher','Bane'];
+const TRAITS=['Borrachín','Noble','Engreído','Misericordioso','Fanfarrón','Neurótico','Alegre','Reservado','Seguro','Amigable','Abusón','Serio','Bromista','Gruñón','Relajado','Estoico','Fumado','Considerado','Terco','Dedicado'];
+const AK=['str','dex','con','pre'];
+const ATTR={str:'Fuerza',dex:'Destreza',con:'Constitución',pre:'Presencia'};
+const ADESC={str:'Ataques cuerpo a cuerpo, levantar, golpear, romper',dex:'Ataque sorpresa, defensa, sigilo, equilibrio',con:'Supervivencia, beber, aguante, resistencia',pre:'Ataques a distancia, percepción, intimidar, encanto'};
+const attrMod=t=>t>=17?3:t>=15?2:t>=13?1:0;
+const ARMOR=[{n:'Ninguna',red:0,pen:0},{n:'Ligera (cuero/piel)',red:1,pen:0},{n:'Media (malla/anillas/cota)',red:2,pen:1},{n:'Pesada (placas/lamelar)',red:3,pen:2},{n:'Escudo',red:1,pen:0,shield:true}];
+const WEAP=[null,{n:'Espada',h1:'d6',h2:'d8'},{n:'Martillo',h1:'d6',h2:'d8'},{n:'Hacha',h1:'d6',h2:'d8'},{n:'Arco',h2:'d6',ranged:true},{n:'Daga',h1:'d4'},{n:'Seax',h1:'d6'}];
+const SUP={11:['Saco de dormir',5],12:['Pedernal y acero',2],13:['Yesca',1],14:['Antorchas (3)',2],15:['Raciones (3)',10],16:['Flechas (15)',10],21:['Efigie de plata',10],22:['Capa',10],23:['Caña de pescar',25],24:['Jarra',5],25:['Cerveza',1],26:['Garfio',15],31:['Pértiga',5],32:['Palanca',10],33:['Reloj de bolsillo',10],34:['Cuerda',5],35:['Linterna',15],36:['Trampa para osos',15],41:['Red',5],42:['Poción de curación',25],43:['Arco',50],44:['Tienda',10],45:['Martillo y clavos',10],46:['Grilletes',10],51:['Relicario',1],52:['Laúd',25],53:['Diario',3],54:['Pala',8],55:['Ganzúas (3)',10],56:['Hierba de pipa',2],61:['Petaca',5],62:['Aceite',5],63:['Brújula',5],64:['Aguja e hilo',2],65:['Figurilla de caballero',5],66:['Espejo',25]};
+const SEASONS=['Invierno','Primavera','Verano','Otoño'];
+const W=(n,speed,forage,cave)=>({n,speed,forage,cave:!!cave});
+const WEATHER={
+ 'Otoño':[W('Tormenta eléctrica','X','X',1),W('Chubascos de otoño','½','X'),W('Día cálido','',1),W('Lluvia','',-1),W('Brisa ligera','',0),W('Cielo despejado','',1)],
+ 'Verano':[W('Día perfecto','',2),W('Aguacero','½',-1),W('Muy caluroso','½',-1),W('Caluroso','½',0),W('Nublado','',0),W('Despejado','',1)],
+ 'Primavera':[W('Tormenta de rayos','X','X',1),W('Lluvia intensa','½','X'),W('Fresco','',-1),W('Lluvia repentina','',-1),W('Soleado con nubes','',0),W('Despejado y soleado','',1)],
+ 'Invierno':[W('Ventisca','X','X',1),W('Tormenta de nieve','½',-2),W('Nevada intensa','½',-1),W('Frío intenso','',-1),W('Nevada ligera','',0),W('Despejado y frío','',-1)]};
+const TERR=['Bosque','Llanuras','Colinas','Montañas','Pantano/Humedal','Río/Lago/Costa'];
+const ORACLE=['No, y además…','No, pero…','No','Sí','Sí, pero…','Sí, y además…'];
+const POI=['Asentamiento','Entrada de mina derrumbada','Ruinas de castillo','Carreta rota bloquea el paso','Huellas que se pierden en la distancia','Árbol solitario de aspecto antinatural','Grupo de hongos resplandecientes','Círculo de dólmenes','Enorme pila de huesos','Cementerio',
+'Asentamiento','Abertura de cueva','Ramas que cubren una entrada','Terreno que emite calor','Campamento goblin','Espada clavada en la tierra','Lápida','Letrero que dice «PELIGRO»','3d6 monedas de oro manchadas de sangre','Atalaya',
+'Asentamiento','Abadía','Pozo aparentemente sin fondo','Altar de huesos y pieles','Frasco de dientes','Campamento usado recientemente','Cantina de camino','Efigie gigante de paja','Carpa de carnaval en medio de la nada','Docenas de animales muertos en filas',
+'Asentamiento','Pabellón de caza','Tesoro enterrado a toda prisa','Huesos de esqueleto enorme','Campamento con 1d4 objetos al azar','Un caballo muerto','Montículo de flores','Cadáver calcinado que alza la mano al cielo','Aldea abandonada','Arenas movedizas',
+'Asentamiento','Huellas de animal','Fuente de las hadas','Santuario cubierto de musgo','Campo de hongos','Cráter enorme','Aguas termales','Ruinas de una torre','Cadáver apoyado en un árbol','Campo de batalla embrujado',
+'Asentamiento','Mina abandonada','Grandes excrementos de animal','Buitres en círculo sobre algo','Huellas 3 veces más grandes que las de un hombre','Choza de ermitaño','3 tumbas recién cavadas','Cadáver de pantano','Laberinto de setos','Cueva',
+'Asentamiento','Altar de sacrificios','Gran nido de pájaro','Cadáveres colgando de un árbol','Campamento abandonado con sangre','Túmulo de piedras (cairn)','Gran agujero cubierto de telarañas','Campo de hormigueros','Obelisco','Árbol con grandes marcas de dientes/garras',
+'Templo','Campamento de cazadores','Molino de viento','Granja','Estatua','Monolito','Gran mansión gótica','Campamento de bandidos','Campo calcinado','Gran charco de sangre',
+'Posada/Taberna de camino','Convento','Puesto avanzado','Puente desvencijado sobre un gran abismo','Molino de agua','Puesto de caza (escondite)','Guarida de Trol','Torre de señales apagada','Pozo','Campamento de Gigante',
+'Torre de Mago','Metrópolis','Túmulos (Barrow Downs)','Cementerio de mascotas (sí, ese)','Entrada de cueva custodiada por un conejo','Estanque','Sumidero','Granero','Campamento de mercaderes','Guarida del Dragón'];
+const ENC=[
+['Bandido exige un peaje','1d4 Goblins discutiendo','Lobo hambriento empieza a seguirte','Carga un Jabalí','Uno de 3 Cultistas te pregunta si tienes un momento','Hada borracha pide indicaciones','Un Gigante cruza tu camino','Araña gigante desciende desde arriba','Un Ogro acorrala a un perro','Trol de musgo levanta la vista al pasar','Zombi solitario a lo lejos','Mago Loco lanzando hechizos a los árboles','1d4 Bandidos te ofrecen una alternativa','Serpiente gigante sobre ti','1d4 Bandidos bloquean tu camino','Un cazador advierte de una emboscada más adelante','2 Goblins fingen ser arbustos','1d4 Lobos te rodean','Goblins robando a un mercader','Encuentras un arma aleatoria'],
+['1d4 Monjes (en realidad Bandidos)','Oso protegiendo a su cría','1d6 Monjes de paso','Mercader ambulante','1d4 PNJ intentando arreglar una rueda de carreta','1d6 Goblins bloquean tu camino','1d4 Acólitos cargando un ataúd','Goblin lanzando piedras','Gigante dormido contra una lápida','Ogro cargando un saco que se mueve','2d6 Lobos devorando un caballo','Una batalla en curso','Una Bruja recogiendo hierbas','Un Goblin fracasa al intentar hacerse amigo de una araña','Mago Loco hablando solo','Un Gigante te confunde con otra persona','Serpiente gigante saliendo de un agujero','Trol durmiendo bajo un puente','Bandidos te exigen 2d6 de oro','Encuentras una pieza de armadura'],
+['3 Goblins en un concurso de rodar barriles','Monje meditando','Ogro cargando una jaula de cuervos','Un Hada intenta robarte del bolsillo','2d6 Bandidos incendiando una granja','Mercader ambulante','1d4 Bandidos saqueando un cadáver','Bardo ambulante','1d6 Goblins atacan','Sacerdote zombi sin brazos','1d6 Acólitos cantando','Bandido inconsciente','Un gato te sigue','Mago Loco convencido de que le robaste','Serpiente gigante custodiando una cueva','Un explorador te pide hierba de pipa','1d4 Lobos atacando a un mercader','Un osezno se interesa por ti','Bandido bloquea tu camino','Cofre medio enterrado'],
+['Ogro acorralando a una cabra','Puma acechando a un gato','2d6 Orcos marchando adelante','Un cazador bien vestido pide ayuda','Una cabra mastica lo que parece un mapa','Mercader ambulante con un pergamino mágico','1d6 Bandidos','1d4 Goblins aterrorizando a una cabra','Gigante cargando un saco que grita','Un Puma empieza a acecharte','Goblin te lanza piedras','1d6 Cultistas en una ceremonia','2d6 Murciélagos salen de una cueva','Ogro dormido','Un niño vende hongos que encontró','Araña gigante sale de su madriguera','Un perro empieza a seguirte','Mercader ambulante','Arquero bandido te dispara','Encuentras un suministro aleatorio'],
+['Un Espectro surge de la tierra húmeda','Oyes que alguien dice tu nombre','2d6 Zombis con herramientas de granja','Buitres en círculo sobre algo','Goblin lanzando piedras a un cuervo','Un Trol de musgo te ve','Espectro flotando sobre una tumba','1d6 Bandidos','Vampiro alimentándose de una víctima','1d4 Goblins bloquean tu camino','Bruja corre hacia ti señalando y gritando','1d4 Esqueletos en la niebla','1d6 Zombis en la niebla','Humo saliendo de una granja','Espectro arrastra un animal a una cueva','Orcos más adelante exigen un peaje','Juglares traen noticias','Anciana dulce te ofrece comida (es una Bruja)','1d6 Lobos te rodean','Encuentras 1d4 hongos'],
+['1d4 Goblins lanzando explosivos al agua','Zombi saliendo del barro','Pira funeraria a lo lejos','¡Hidra!','Hada llorando junto a un arroyo','Mago Loco intentando congelar un estanque','Mensaje en una botella','Un marinero de paso te ofrece de su botella','2d6 Serpientes se deslizan hacia ti','Hadas de fiesta en una casa del árbol','Goblin con el pie atascado en el barro','Oyes un canto hermoso desde una cueva acuática','Cadáver flotando','1d4 Orcos','Oyes gritos desde una choza','Una Hidra te ve','Naufragio','1d4 Engendros vampíricos chillan desde arriba','Bandido borracho se tambalea cerca','¿Es eso un cofre bajo el agua?']];
+const CAVE=['La entrada se derrumba: debes explorar la cueva (mazmorra). La última sala sale a un hexágono cercano.','Hay un Oso en la cueva.','Atacan 2d6 Murciélagos.','Alguien más está en esta cueva.','Encuentras un suministro aleatorio.','La tormenta pasa sin incidentes.'];
+const FORAGE=[['No encuentras nada',0],['Raíces masticables',1],['Verduras',2],['Fruta',3],['Abundantes frutas y verduras',5],['¡Un Hongo!',0]];
+const SIGNS=['Sin huellas ni señales de caza','Tira en Encuentros de caza 1','Huellas frescas de Conejo → Rastreo','Excrementos frescos de Ciervo → Rastreo','Huellas frescas de Jabalí → Rastreo','Encuentras un suministro aleatorio'];
+const TRAIL=['Pierdes el rastro','Tira en Encuentros de caza 2','¡Avistas la presa! Dispara: PRE DR14','¡Avistas la presa! Dispara: PRE DR12','¡Avistas la presa! Dispara: PRE DR10','¡Avistas la presa! Dispara: PRE DR8'];
+const HUNT1=['Un rastro de sangre lleva a una cueva','Tropiezas con un campamento de cazadores furtivos','Encuentras un perro herido','Ataque goblin'];
+const HUNT2=['Un oso devora tu presa','Un furtivo que sigue las mismas huellas te amenaza','Un gato te ayuda a abatir tu presa','Unas hadas acosan a tu presa: dispara PRE DR8'];
+const CAST=['Ni un mordisco','Tira en Encuentros de pesca 1','¡Pican! → Recoger','¡Pican! → Recoger','¡Pican! → Recoger','Pescas un suministro aleatorio'];
+const REEL=['Se rompe el sedal','El pez escapa','Tira en Encuentros de pesca 2','¡Bagre! FUE DR12','¡Trucha! FUE DR10','¡Perca! FUE DR8'];
+const FISH1=['Un rayo cae en el agua: DES DR12, si fallas 1d4 de daño','Sientes que alguien se acerca por detrás','Un cuervo se posa y te observa. Vuelve a lanzar','¿Es eso un cofre en el fondo del agua?'];
+const FISH2=['Un goblin salta y te roba el pez','Pescas una piraña: DES DR10 o pierdes un dedo','Dos truchas en el mismo anzuelo','Una perca con un anillo de 20g en la boca'];
+const CAMP12=['Ataque de un Guerrero esqueleto','Un Vampiro pide permiso para entrar a tu campamento','Un hombre herido irrumpe gritando pidiendo ayuda','Un Oso entra e intenta robar 1d4 raciones','Hadas de fiesta a lo lejos no te dejan dormir: −1 Juerga','Oyes pasos pero no ves nada','Un lobo solitario entra y se queda mirando el fuego','Atacan 1d4 Goblins','Ataque de un Zombi','Un bardo cambia canciones por comida: +1 Juerga','1d4 Engendros vampíricos se quedan al borde del campamento burlándose','Despiertas con un cazador furtivo hurgando en tus cosas'];
+const PARTY=[{t:'Despiertas con resaca: velocidad ½ mañana.',half:1},{t:'Ojo izquierdo hinchado: −1 DES mañana (deberías ver al otro).',mods:{dex:-1}},{t:'Te comiste todas tus raciones a medianoche.',eatAll:1},{t:'Viaje espiritual: te conoces mejor, pero todo parece respirar. −1 PRE mañana.',mods:{pre:-1}},{t:'Despiertas en un hexágono cercano. Vuelve al campamento por tus cosas.'},{t:'Despiertas con un pergamino mágico aleatorio en el bolsillo… y con resaca: velocidad ½ mañana.',half:1,scroll:1},{t:'¿Tienes los bolsillos llenos de arena?'},{t:'Te sientes bastante bien: +1 CON mañana.',mods:{con:1}}];
+const WOUNDS=['Mueres.','Hemorragia grave: mueres en 1d4 horas si no te tratan.','Tira 1d6: 1–3 miembro roto o amputado; 4–6 pierdes un ojo. −1 a todos los atributos hasta curarte.','Inconsciente: despiertas en 1d4 rondas con 1 PV.','Arrebato de fuerza: recuperas 1d4 PV y sigues luchando.','¡Berserker! Recuperas 1d6 PV y +2 FUE durante 2 rondas.'];
+const SCROLLS=[['Rayo','1d6 de daño a todos los objetivos cercanos entre sí'],['Bola de fuego','2d6 de daño'],['Influencia','El objetivo obedece una orden (es consciente de ello)'],['Curación','Cura TODAS las heridas de un objetivo, incluso miembros amputados'],['Invisibilidad','Invisible 1d4 rondas; termina al causar daño'],['El Vampiro','Drena 1d6 de vida y te curas esa cantidad'],['Cabeza de Burbuja','Orbe de agua: inconsciente 1d4 rondas; no se puede romper'],['Ganzúa','Abre cualquier cerradura'],['Sueño','Duerme hasta recibir daño o ser molestado'],['Enfermedad','Vomita sin control 1d4 rondas'],['Poder','+1 a un atributo durante un día'],['Caos','El objetivo ataca al amigo o enemigo más cercano']];
+const MAGIC=[['Amuleto maldito','+1 a un atributo a costa de −1 en otro'],['Daga del pícaro','Ataques sorpresa con DR8'],['Anillo del cazador','+1 en todas las tiradas de caza'],['Anillo del herbolario','+1 en todas las tiradas de forrajeo'],['Daga odiosa','d6 de daño, pero te odia y avisa a los enemigos cuando atacas'],['Arco del tirador','−2 DR en pruebas a distancia'],['Hacha de la resistencia','+2 de daño con menos de la mitad de PV'],['Martillo del terremoto','En crítico, el enemigo cae; tira daño extra'],['Anillo de la suerte','+1 a cualquier tirada, una vez al día'],['Capa de invisibilidad','Una vez al día, invisible 1 ronda'],['Escudo del caballero sagrado','Una vez al día bloquea todo el daño de un enemigo'],['Espada vampírica','Ganas 1 PV cada vez que golpeas'],['Petaca sin fondo','Se rellena cada mañana (1 uso/día)'],['Espada flamígera','En crítico, el enemigo arde: 2 de daño por ronda durante 1d4 rondas'],['Anillo de la codicia','+1 en tiradas de botín, pero ningún mercader te compra'],['Capa del viajero','Convierte un día de velocidad ½ en uno normal'],['Seax nigromántico','+1 de daño contra no-muertos'],['Hacha de escarcha','En crítico, inmoviliza 1d4 rondas y +1 de daño'],['Flechas de choque (10)','+1 de daño y 1 de daño a cada enemigo Cerca'],['Mjolnir','El antiguo martillo enano: d10 de daño; en crítico d12']];
+const REACT=['Intención asesina','Abusón','Confrontativo','Te evita activamente','Te ignora','Te sigue / vigila de cerca','Amistoso','Comparte un rumor o información','Activamente servicial','Pide acompañarte'];
+const RUMORS=['Están desenterrando cadáveres. ¿Un ladrón de tumbas o algo peor?','Un culto cercano captura y sacrifica hadas','Una sirena en una cueva costera devora marineros','Una reina de las hadas en un claro concede objetos mágicos','Prisioneros fugados andan sueltos','Se vio una caravana de Elfos en el bosque','Una especie de dragón blanco con aspecto de perro en una guarida','Murió el líder de los acólitos; ¿quién lo reemplazará?','Un árbol que es un portal a un laberinto','Alguien está quemando templos','Una posada sirve carne de dudosa procedencia','Un grupo de goblins ha inventado explosivos','Nadie ha visto al Príncipe en semanas','Ruidos fuertes en las Montañas Gogoroth','El legendario cazador Abbath organiza una cacería de dragón','El capitán Marduk de la Guardia del Rey ha renunciado','El Rey Ihsahn sale del castillo por primera vez en años','Luces brillantes sobre las Colinas Windrose por la noche','Mortis, el rey goblin, planea atacar a los enanos','Los habitantes de una aldea desaparecieron sin dejar rastro'];
+const NPC_N=['Higgby','Benjyn','Darius','Aldric','Falk','Osric','Roderick','Pierc','Logan','Corban','Mara','Miram','Lyra','Constance','Zara','Johanna','Johan','Quinn','Eddard','Farquad'];
+const NPC_O=['Herrero','Minero','Guardia','Ama de casa','Sacerdote','Posadero','Mercader','Cazador','Tonelero','Marinero','Bardo','Pescador','Mensajero','Vagabundo','Zapatero','Noble','Caballero','Adivino','Sacerdotisa','Erudito'];
+const NPC_M=['Venganza','Deseo','Oro','Información','Redención','Poder','Justicia','Una cura','Evitar un desastre','Una apuesta','Objeto perdido','Botín/Tesoro','Un juramento','Codicia','Ayudar a un amigo','Devolver algo','Honor','Gloria','Persona desaparecida','Proteger'];
+const NPC_P=['Sabio','Académico','Idealista','Amargado','Astuto','Sensible','Inquieto','Codicioso','Taimado','Angustiado','Apático','Empático','Paranoico','Bonachón','Torpe','Entusiasta','Excéntrico','Desesperado','Estoico','Frívolo'];
+const DENC=['Vampiro','Serpiente gigante','1d4 Engendros vampíricos','1d4 Goblins','Araña gigante','1d4 Goblins','1d6 Acólitos','Hada atrapada','1d4 Zombis','1d6 Cultistas','2d6 Murciélagos','Mago Loco','Orco','2d6 Ratas','1d4 Momias','1d6 Esqueletos','1d4 Goblins','1d4 Esqueletos','2d6 Serpientes','1d4 Bandidos'];
+const SET_NAMES=['Chozas/cabañas','Aldea','Pueblo','Ciudad'];
+const ABIL=[['extra','Un ataque extra por ronda'],['dual','Con dos armas, sumas el daño a una mano de ambas'],['maxfree','Si haces daño máximo, ataque gratis contra otro enemigo cercano'],['surprise','Ataque sorpresa con DES DR8'],['atk','+1 a ataques cuerpo a cuerpo y a distancia'],['loot','Encuentras tesoro/botín con 4–6'],['mush4','Puedes llevar hasta 4 hongos'],['forage','+2 a forrajear'],['scroll2','Los pergaminos se usan dos veces'],['armor','−1 adicional a la reducción de tu armadura']];
+const B=(n,hp,ar,mo,d,sp)=>({n,hp,ar,mo,d,sp});
+const BEAST={
+ acolyte:B('Acólito',6,0,4,'d4'), bandit:B('Bandido',6,1,6,'d6'), bats:B('Murciélagos',1,0,3,'d4'), bear:B('Oso',14,1,8,'d8'), boar:B('Jabalí',8,0,4,'d6'),
+ cultist:B('Cultista',4,0,6,'d4',{t:'Daga envenenada',desc:'Si te hiere, al final del combate tira 1d6: 1–2 envenenado.',passive:1}),
+ dragon:B('Dragón',40,3,10,'d12',{t:'Aliento de fuego',desc:'Cada 3 rondas: llamas de 3d6 de daño.',dice:'3d6'}),
+ fairy:B('Hada',2,0,3,'d4'), giant:B('Gigante',18,1,8,'d8',{t:'Pisotón',desc:'Cada 3 rondas: 3d6 de daño.',dice:'3d6'}),
+ gsnake:B('Serpiente gigante',10,1,8,'d6'), spider:B('Araña gigante',12,2,7,'d8'),
+ hag:B('Bruja (Hag)',16,0,null,'d6',{t:'Enfermedad',desc:'Cada 3 rondas: supera DES DR12 o vomitas sin control 2 rondas.',test:'dex',dr:12,skip:2,fail:'Vomitas sin control: pierdes tus 2 próximos turnos.'}),
+ hydra:B('Hidra',12,0,7,'d8'), wizard:B('Mago Loco',8,0,8,'d10'), goblin:B('Goblin',7,1,7,'d6'), lion:B('Puma',10,0,7,'d6'), mummy:B('Momia',6,0,null,'d4'),
+ ogre:B('Ogro',16,1,5,'d8'), orc:B('Orco',10,2,8,'d6'), poacher:B('Cazador furtivo',6,0,4,'d4'), rats:B('Ratas',1,0,3,'d4'), skeleton:B('Esqueleto',5,0,null,'d4'),
+ skelwar:B('Guerrero esqueleto',10,2,null,'d6'), snakes:B('Serpientes',1,0,4,'d4'), troll:B('Trol',16,0,6,'d8'),
+ vampire:B('Vampiro',18,2,9,'d8',{t:'Hoja vampírica',desc:'Cada 3 rondas: si te golpea, recupera esos PV.',drain:1}),
+ vspawn:B('Engendro vampírico',6,0,6,'d6'), wolf:B('Lobo',6,0,7,'d6'),
+ wraith:B('Espectro (Wraith)',12,0,null,'d8',{t:'Acecho',desc:'Cada 3 rondas: supera CON DR12 o una visión agonizante te paraliza 1 ronda.',test:'con',dr:12,skip:1,fail:'Una visión agonizante: pierdes tu próximo turno.'}),
+ zombie:B('Zombi',6,0,null,'d4'),
+ companion:B('Criatura genérica',6,0,6,'d6')};
+const KW=[['engendro','vspawn'],['vampiro','vampire'],['guerrero esqueleto','skelwar'],['esqueleto','skeleton'],['bandido','bandit'],['goblin','goblin'],['araña','spider'],['serpiente gigante','gsnake'],['serpiente','snakes'],['gigante','giant'],['ogro','ogre'],['trol','troll'],['zombi','zombie'],['mago loco','wizard'],['bruja','hag'],['espectro','wraith'],['orco','orc'],['puma','lion'],['murciélago','bats'],['hidra','hydra'],['furtivo','poacher'],['monje','acolyte'],['acólito','acolyte'],['cultista','cultist'],['lobo','wolf'],['oso','bear'],['jabalí','boar'],['rata','rats'],['momia','mummy'],['hada','fairy']];
+
+/* ================= ESTADO ================= */
+function blankChar(){return {name:'',bg:0,naked:false,trait:'',str:0,dex:0,con:0,pre:0,raw:{},hp:0,hpMax:0,armor:0,armorName:'Ninguna',armorRed:0,dexPen:0,extraShield:false,weapon:{n:'Puños',die:'d4',ranged:false,plus:0},gold:0,rations:3,mushrooms:2,merriment:0,items:[],scrolls:[],abilities:[],season:null,terrain:null,day:1,hexes:0,hungry:false,poisoned:false,wounded:false,bleeding:false,weaponDamaged:false,hasBow:false,hasRod:false,level:1,xp:0,dayMods:{},nextMods:{},nextHalf:false,notes:'',created:false};}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==='object')return Object.assign({char:null,turn:null,log:[],view:'home'},s);}catch(e){}return {char:null,turn:null,log:[],view:'home'};}
+let S=load();
+const ch=()=>S.char;
+let CURS={create:null,turn:null};
+let K=null, G=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}renderStatus();}
+function log(t,x){S.log.push({d:S.char?S.char.day:0,t,x});if(S.log.length>500)S.log.shift();save();}
+const hasAb=k=>!!(ch()&&ch().abilities.includes(k));
+const maxMush=()=>hasAb('mush4')?4:3;
+function addItem(n,q=1){const c=ch();const it=c.items.find(i=>i.n===n);if(it)it.q+=q;else c.items.push({n,q});}
+const hasItem=n=>ch().items.some(i=>i.n===n&&i.q>0);
+function useItem(n){const c=ch();const it=c.items.find(i=>i.n===n);if(!it)return;it.q--;if(it.q<=0)c.items=c.items.filter(i=>i!==it);}
+function applySupply(code){const c=ch();const name=SUP[code][0];const m=/^(.*) \((\d+)\)$/.exec(name);
+ if(+code===15)c.rations+=3;else if(m)addItem(m[1],+m[2]);else addItem(name);
+ if(+code===43)c.hasBow=true;if(+code===23)c.hasRod=true;return name;}
+function gainMush(n){const c=ch();c.mushrooms=Math.min(maxMush(),c.mushrooms+n);}
+
+/* ================= DADOS ================= */
+function range(d){if(d==='d66')return[11,66];const m=/^(\d*)d(\d+)$/.exec(d);const n=+(m[1]||1),s=+m[2];return[n,n*s];}
+function roll(d,reroll){if(d==='d66')return rnd(6)*10+rnd(6);const m=/^(\d*)d(\d+)$/.exec(d);const n=+(m[1]||1),s=+m[2];let t=0;for(let i=0;i<n;i++){let r;do{r=rnd(s);}while(reroll&&reroll.includes(r));t+=r;}return t;}
+
+/* ================= MOTOR DE PASOS ================= */
+const stage=()=>$('#stage');
+function setCur(c){CURS[S.view]=c;}
+function replay(c){if(!c)return;if(c.k==='ask')ask(c.o);else if(c.k==='show')show(c.o);else c.fn();}
+function scrollStage(){const st=document.querySelector('#status:not(:empty)')||stage();if(!st)return;const y=st.getBoundingClientRect().top+window.scrollY-62;if(window.scrollY>y||window.scrollY+window.innerHeight<y+120){try{window.scrollTo({top:Math.max(0,y)});}catch(e){}}}
+function head(o){return `${o.table?`<div class="tbl">📜 Tabla consultada: <b>${esc(o.table)}</b></div>`:''}<h3>${esc(o.title)}</h3>`;}
+function tbl(rows,hi){return `<table class="t">${rows.map(r=>`<tr${hi!=null&&String(r[0])===String(hi)?' class="hi"':''}><td>${r[0]}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>`;}
+const nrows=a=>a.map((x,i)=>[i+1,Array.isArray(x)?x[0]:x]);
+
+function ask(o){setCur({k:'ask',o});const[mn0,mx0]=range(o.dice);const mn=o.min??mn0,mx=o.max??mx0;
+ stage().innerHTML=`<div class="card">${head(o)}${o.text?`<div class="txt">${o.text}</div>`:''}
+ <div class="dice">🎲 Tira <b>${esc(o.label||o.dice)}</b>${o.hint?` <span class="hint">(${esc(o.hint)})</span>`:''}</div>${o.extra||''}
+ <div class="row"><input id="rv" type="number" inputmode="numeric" min="${mn}" max="${mx}" placeholder="${mn}–${mx}"><button id="ok" class="btn">Confirmar</button></div>
+ <button id="auto" class="btn ghost">Tirar por mí</button><div id="err" class="err"></div>
+ ${o.cancel?`<div class="choices"><button id="cx" class="btn ghost small">${esc(o.cancel.label)}</button></div>`:''}</div>`;
+ const inp=$('#rv');
+ const go=v=>{const bad=!Number.isInteger(v)||v<mn||v>mx||(o.dice==='d66'&&(v%10<1||v%10>6||Math.floor(v/10)<1||Math.floor(v/10)>6));
+  if(bad){$('#err').textContent=`Valor inválido: debe estar entre ${mn} y ${mx}${o.dice==='d66'?' y cada dígito de 1 a 6':''}.`;return;}o.onResult(v);};
+ $('#ok').onclick=()=>go(parseInt(inp.value,10));
+ inp.onkeydown=e=>{if(e.key==='Enter')go(parseInt(inp.value,10));};
+ $('#auto').onclick=()=>{const v=roll(o.dice,o.reroll);inp.value=v;go(v);};
+ if(o.cancel)$('#cx').onclick=o.cancel.fn;
+ scrollStage();}
+function show(o){setCur({k:'show',o});
+ stage().innerHTML=`<div class="card ${o.cls||''}">${head(o)}${o.roll!=null?`<div class="res">Resultado: <b>${o.roll}</b></div>`:''}${o.text?`<div class="txt">${o.text}</div>`:''}
+ <div class="choices">${(o.choices||[]).map((c,i)=>`<button class="btn ${c.cls||''}" data-i="${i}">${esc(c.label)}</button>`).join('')}</div></div>`;
+ stage().querySelectorAll('.choices button').forEach(b=>b.onclick=()=>o.choices[+b.dataset.i].fn());
+ scrollStage();}
+const msg=(title,table,text,fn,label='Continuar',extra={})=>show(Object.assign({title,table,text,choices:[{label,fn}]},extra));
+function askNum(o){setCur({k:'fn',fn:()=>askNum(o)});
+ stage().innerHTML=`<div class="card">${head(o)}<div class="txt">${o.text||''}</div><div class="row"><input id="nv" type="number" inputmode="numeric" value="${o.value??''}"><button class="btn" id="nok">Aplicar</button></div><div class="choices">${o.cancel?`<button class="btn ghost" id="ncx">${esc(o.cancel.label)}</button>`:''}</div></div>`;
+ $('#nok').onclick=()=>{const v=parseInt($('#nv').value,10);if(Number.isInteger(v))o.onResult(v);};if(o.cancel)$('#ncx').onclick=o.cancel.fn;scrollStage();}
+function askText(title,ph,fn){setCur({k:'fn',fn:()=>askText(title,ph,fn)});
+ stage().innerHTML=`<div class="card">${head({title})}<input id="tv" placeholder="${esc(ph)}"><div class="choices"><button class="btn" id="tok">Aceptar</button></div></div>`;
+ $('#tok').onclick=()=>{const v=$('#tv').value.trim();if(v)fn(v);};scrollStage();}
+
+/* ---------- Pruebas (d20 + modificador vs DR) ---------- */
+function totalMod(a){const c=ch();let m=c[a]||0;const n=[];
+ if(a==='dex'&&c.dexPen){m-=c.dexPen;n.push(`armadura −${c.dexPen}`);}
+ if(c.hungry){m--;n.push('hambre −1');}if(c.poisoned){m--;n.push('veneno −1');}if(c.wounded){m--;n.push('herida −1');}
+ const dm=(c.dayMods||{})[a];if(dm){m+=dm;n.push(`efecto del día ${fmt(dm)}`);}
+ if(a==='str'&&K&&K.berserk>0){m+=2;n.push('berserker +2');}
+ return{m,n};}
+function test(o){const c=ch();const{m:m0,n}=totalMod(o.attr);const m=m0+(o.bonus||0);if(o.bonus)n.push(`bonificación ${fmt(o.bonus)}`);
+ const extra=`<div class="opts">${c.merriment>0?`<label><input type="checkbox" id="xm"> Gastar 1 Juerga (+1) · tienes ${c.merriment}</label>`:''}${c.mushrooms>0?`<label><input type="checkbox" id="xh"> Gastar 1 Hongo (DR −4) · tienes ${c.mushrooms}</label>`:''}</div>`;
+ const table=o.table||'Pruebas';
+ ask({title:o.title,table,dice:'1d20',label:`1d20 ${fmt(m)} (${ATTR[o.attr]})`,extra,
+  text:`${o.why?o.why+'<br>':''}Prueba de <b>${ATTR[o.attr]}</b> contra <b>DR${o.dr}</b>. Éxito si el total es igual o mayor.<br><small>Modificador: base ${fmt(c[o.attr])}${n.length?', '+n.join(', '):''} = <b>${fmt(m)}</b></small>`,
+  onResult:r=>{let bonus=0,dr=o.dr;const xm=$('#xm'),xh=$('#xh');
+   if(xm&&xm.checked){c.merriment--;bonus=1;}if(xh&&xh.checked){c.mushrooms--;dr-=4;}save();
+   const tot=r+m+bonus,ok=tot>=dr,crit=r===20,fum=r===1;
+   log(table,`${ATTR[o.attr]} DR${dr}: ${r}${fmt(m+bonus)}=${tot} → ${ok?'Éxito':'Fallo'}${crit?' (crítico)':''}${fum?' (pifia)':''}`);
+   const chs=[{label:'Continuar',fn:()=>o.onDone(ok,r,tot)}];
+   if(fum&&c.mushrooms>0)chs.unshift({label:`🍄 Gastar hongo e ignorar la pifia (${c.mushrooms})`,cls:'alt',fn:()=>{c.mushrooms--;save();o.onDone(ok,2,tot);}});
+   if(!ok&&c.mushrooms>0)chs.unshift({label:`🍄 Gastar hongo y repetir la tirada (${c.mushrooms})`,cls:'alt',fn:()=>{c.mushrooms--;save();test(o);}});
+   show({title:o.title,table,roll:r,cls:ok?'ok':'bad',text:`Total: ${r} ${fmt(m+bonus)} = <b>${tot}</b> contra DR${dr} → <b>${ok?'¡ÉXITO!':'FALLO'}</b>${crit?'<br>⭐ ¡Crítico (20 natural)!':''}${fum?'<br>💀 ¡Pifia (1 natural)!':''}`,choices:chs});}});}
+
+/* ---------- Daño al jugador ---------- */
+function hurt(d,src,next,extra=''){const c=ch();c.hp=Math.max(0,c.hp-d);log('Daño recibido',`${src}: −${d} PV (${c.hp}/${c.hpMax})`);
+ if(c.hp<=0)return show({title:'¡Caes a 0 PV!',table:'Heridas y Muerte',cls:'bad',text:`Recibes ${d} de daño.${extra?'<br>'+extra:''}<br>Debes tirar en la tabla de Heridas y Muerte.`,choices:[{label:'Tirar 1d6',fn:()=>wounds(next)}]});
+ show({title:`Recibes ${d} de daño`,table:'Daño',cls:d?'bad':'ok',text:`PV: <b>${c.hp}/${c.hpMax}</b>${extra?'<br>'+extra:''}`,choices:[{label:'Continuar',fn:next}]});}
+function wounds(next){const c=ch();
+ ask({title:'Heridas y Muerte',table:'Heridas y Muerte',dice:'1d6',text:tbl(nrows(WOUNDS)),onResult:v=>{log('Heridas y Muerte',`${v}: ${WOUNDS[v-1]}`);
+  const done=t=>{save();show({title:'Heridas y Muerte',table:'Heridas y Muerte',roll:v,text:tbl(nrows(WOUNDS),v)+t,choices:[{label:'Continuar',fn:next}]});};
+  if(v===1){c.dead=true;save();K=null;return show({title:'☠️ Has muerto',table:'Heridas y Muerte',roll:1,cls:'bad',text:`${esc(c.name||'Tu enano')} cae para no levantarse. Su viaje termina tras ${c.hexes||0} hexágonos y ${c.day} días.`,choices:[{label:'Crear un nuevo enano',fn:()=>{S.turn=null;CURS={create:null,turn:null};S.char=null;save();go('create');}}]});}
+  if(v===2){c.hp=1;c.bleeding=true;return done('<p class="warn">Sigues con 1 PV, pero sangras: si no te tratas (poción, sanador o pergamino de curación) mueres en 1d4 horas.</p>');}
+  if(v===3)return ask({title:'¿Qué herida?',table:'Heridas y Muerte (3)',dice:'1d6',text:tbl([['1–3','Miembro roto o amputado'],['4–6','Pierdes un ojo']]),onResult:x=>{c.wounded=true;c.hp=1;log('Heridas',x<=3?'Miembro roto/amputado':'Ojo perdido');
+   done(`<p class="warn">${x<=3?'Miembro roto o amputado (una poción cura uno roto, no uno amputado).':'Pierdes un ojo (solo la magia lo cura).'} −1 a todos los atributos hasta curarte. Quedas con 1 PV.</p>`);}});
+  if(v===4)return ask({title:'Inconsciente',table:'Heridas y Muerte (4)',dice:'1d4',text:'Rondas que pasas inconsciente.',onResult:x=>{c.hp=1;if(K)K.skip+=x;done(`<p>Despiertas en ${x} ronda(s) con 1 PV${K?'; pierdes esos turnos':''}.</p>`);}});
+  if(v===5)return ask({title:'Arrebato de fuerza',table:'Heridas y Muerte (5)',dice:'1d4',onResult:x=>{c.hp=x;done(`<p>Recuperas ${x} PV y sigues luchando.</p>`);}});
+  return ask({title:'¡Berserker!',table:'Heridas y Muerte (6)',dice:'1d6',onResult:x=>{c.hp=Math.min(c.hpMax,x);if(K)K.berserk=2;done(`<p>Recuperas ${x} PV y ganas +2 FUE durante 2 rondas.</p>`);}});}});}
+
+/* ================= CREACIÓN DE PERSONAJE ================= */
+function createIntro(){S.char=blankChar();S.turn=null;save();
+ show({title:'Creación de personaje',table:'Creación de personaje',text:`<p><b>Eres un Enano.</b> Orgulloso de tu herencia, odias a los Goblins, te das tus gustos (cerveza, pipa o ambas) y eres hábil con las manos.</p>
+ <p>En cada paso te diré qué dados tirar. Tira tus dados reales e introduce el resultado (o pulsa «Tirar por mí»). La guía consultará la tabla y anotará el resultado.</p>
+ <ol class="proc"><li>Trasfondo</li><li>Nombre</li><li>Rasgo</li><li>Atributos</li><li>Puntos de vida y oro</li><li>Armadura y arma</li><li>Suministros</li><li>Estación y terreno inicial</li></ol>`,choices:[{label:'Comenzar',fn:cBg}]});}
+function cBg(){show({title:'Paso 1 · Trasfondo',table:'Trasfondo (d6)',text:'Elige tu trasfondo o tira 1d6.'+tbl(nrows(BG)),
+ choices:[{label:'🎲 Tirar 1d6',fn:()=>ask({title:'Trasfondo',table:'Trasfondo (d6)',dice:'1d6',onResult:setBg})},...BG_SHORT.map((b,i)=>({label:`${i+1}. ${b}`,cls:'ghost',fn:()=>setBg(i+1)}))]});}
+function setBg(v){const c=ch();c.bg=v;c.naked=v===2;log('Trasfondo',`${v}: ${BG[v-1]}`);
+ show({title:'Trasfondo',table:'Trasfondo (d6)',roll:v,text:`<p>${esc(BG[v-1])}</p>${v===2?'<p class="warn">Estás desnudo: empiezas sin armadura ni arma.</p>':''}`,choices:[{label:'Siguiente: Nombre',fn:cName}]});}
+function cName(){show({title:'Paso 2 · Nombre',table:'Generador de nombres',text:'Tira 1d20 para el nombre y 1d6 dos veces para el apellido compuesto, o escribe el tuyo.',
+ choices:[{label:'🎲 Generar con dados',fn:()=>ask({title:'Nombre',table:'Nombre (d20)',dice:'1d20',text:tbl(nrows(FIRST)),onResult:a=>
+   ask({title:'Apellido · primera parte',table:'Apellido · columna 1 (d6)',dice:'1d6',text:`Nombre: <b>${FIRST[a-1]}</b>`+tbl(nrows(L1)),onResult:b=>
+   ask({title:'Apellido · segunda parte',table:'Apellido · columna 2 (d6)',dice:'1d6',text:`<b>${FIRST[a-1]} ${L1[b-1]}-…</b>`+tbl(nrows(L2)),onResult:d=>setName(`${FIRST[a-1]} ${L1[b-1]}-${L2[d-1]}`,`${a}/${b}/${d}`)})})})},
+  {label:'✍️ Escribir nombre',cls:'ghost',fn:()=>askText('Nombre de tu enano','Ej. Von Ale-Crusher',n=>setName(n))}]});}
+function setName(n,r){ch().name=n;log('Nombre',n+(r?` (${r})`:''));save();
+ show({title:'Tu nombre',table:'Generador de nombres',text:`<p class="big">${esc(n)}</p>`,choices:[{label:'Siguiente: Rasgo',fn:cTrait},{label:'Cambiar',cls:'ghost',fn:cName}]});}
+function cTrait(){show({title:'Paso 3 · Rasgo (opcional)',table:'Rasgos (d20)',text:'Un rasgo de personalidad para interpretar a tu enano.',
+ choices:[{label:'🎲 Tirar 1d20',fn:()=>ask({title:'Rasgo',table:'Rasgos (d20)',dice:'1d20',text:tbl(nrows(TRAITS)),onResult:v=>{ch().trait=TRAITS[v-1];log('Rasgo',TRAITS[v-1]);
+  show({title:'Rasgo',table:'Rasgos (d20)',roll:v,text:`<p class="big">${TRAITS[v-1]}</p>`,choices:[{label:'Siguiente: Atributos',fn:()=>cAttr(0)}]});}})},{label:'Omitir',cls:'ghost',fn:()=>cAttr(0)}]});}
+const ATTR_TBL=tbl([['9–12','Modificador 0'],['13–14','Modificador +1'],['15–16','Modificador +2'],['17–18','Modificador +3']]);
+function cAttr(i){const a=AK[i];
+ ask({title:`Paso 4 · ${ATTR[a]} (${i+1}/4)`,table:'Atributos',dice:'3d6',min:9,max:18,reroll:[1,2],hint:'repite los 1 y 2',
+  text:`<p><i>${ADESC[a]}.</i></p><p>Tira 3 dados de 6. Si algún dado sale 1 o 2, vuelve a tirar ese dado. Introduce la suma.</p>${ATTR_TBL}`,
+  onResult:v=>{const m=attrMod(v),c=ch();c[a]=m;c.raw[a]=v;log('Atributos',`${ATTR[a]} ${v} → ${fmt(m)}`);save();
+   show({title:ATTR[a],table:'Atributos',roll:v,text:`Suma ${v} → modificador <b>${fmt(m)}</b>`,choices:[{label:i<3?`Siguiente: ${ATTR[AK[i+1]]}`:'Siguiente: Puntos de vida',fn:()=>i<3?cAttr(i+1):cHP()}]});}});}
+function cHP(){const c=ch();ask({title:'Paso 5 · Puntos de vida',table:'Puntos de vida',dice:'2d6',min:4,max:12,reroll:[1],hint:'repite los 1',text:`PV = 2d6 (repitiendo los 1) + CON (${fmt(c.con)}).`,
+ onResult:v=>{c.hpMax=Math.max(1,v+c.con);c.hp=c.hpMax;log('Puntos de vida',`${v}${fmt(c.con)} = ${c.hpMax}`);save();
+  show({title:'Puntos de vida',table:'Puntos de vida',roll:v,text:`${v} ${fmt(c.con)} = <b>${c.hpMax} PV</b>`,choices:[{label:'Siguiente: Oro',fn:cGold}]});}});}
+function cGold(){const c=ch();ask({title:'Paso 5 · Oro inicial',table:'Recursos iniciales',dice:'3d6',text:'Oro = 3d6 + 10. Además empiezas con 3 raciones y 2 hongos.',
+ onResult:v=>{c.gold=v+10;log('Oro inicial',`${v}+10 = ${c.gold}`);save();
+  show({title:'Oro inicial',table:'Recursos iniciales',roll:v,text:`<b>${c.gold} de oro</b>, 3 raciones y 2 hongos.`,choices:[{label:c.naked?'Siguiente: Suministros':'Siguiente: Armadura',fn:c.naked?cSupplies:cArmor}]});}});}
+function setArmor(i){const c=ch(),a=ARMOR[i];c.armor=i;c.armorName=a.n;c.armorRed=a.red;c.dexPen=a.pen;log('Armadura',`${a.n} (−${a.red})`);save();
+ show({title:'Armadura',table:'Armadura (d4)',roll:i||null,text:`<p class="big">${a.n}</p>Reduce el daño recibido en ${a.red}.${a.pen?` <span class="warn">−${a.pen} a las tiradas de Destreza.</span>`:''}${a.shield?' Con escudo no puedes atacar a dos manos.':''}`,choices:[{label:'Siguiente: Arma',fn:cWeapon}]});}
+function cArmor(){show({title:'Paso 6 · Armadura',table:'Armadura (d4)',text:'Elige o tira 1d4 (una sola).'+tbl(ARMOR.slice(1).map((a,i)=>[i+1,`${a.n} · −${a.red} daño${a.pen?` · −${a.pen} DES`:''}`])),
+ choices:[{label:'🎲 Tirar 1d4',fn:()=>ask({title:'Armadura',table:'Armadura (d4)',dice:'1d4',onResult:setArmor})},...ARMOR.map((a,i)=>({label:`${i?i+'. ':''}${a.n}`,cls:'ghost',fn:()=>setArmor(i)}))]});}
+function setWeapon(i){const c=ch(),w=WEAP[i];
+ const fin=(die,hands)=>{c.weapon={n:w.n,die,ranged:!!w.ranged,hands,plus:0};if(w.ranged){c.hasBow=true;addItem('Flechas',15);}log('Arma',`${w.n} ${die}${hands===2?' (dos manos)':''}`);save();
+  show({title:'Arma',table:'Armas (d6)',text:`<p class="big">${w.n} · ${die}</p>${w.ranged?'Incluye 15 flechas. Los ataques a distancia usan Presencia.':'Los ataques cuerpo a cuerpo usan Fuerza.'}`,choices:[{label:'Siguiente: Suministros',fn:cSupplies}]});};
+ if(w.h1&&w.h2){const sh=ARMOR[c.armor].shield;return show({title:`${w.n}: ¿cómo la empuñas?`,table:'Armas (d6)',text:`A una mano d6, a dos manos d8.${sh?' <span class="warn">Llevas escudo: no puedes usarla a dos manos.</span>':''}`,
+  choices:[{label:'Una mano (d6)',fn:()=>fin(w.h1,1)},...(sh?[]:[{label:'Dos manos (d8)',fn:()=>fin(w.h2,2)}])]});}
+ fin(w.h1||w.h2,w.h1?1:2);}
+function cWeapon(){show({title:'Paso 6 · Arma',table:'Armas (d6)',text:'Elige o tira 1d6 (una sola).'+tbl(WEAP.slice(1).map((w,i)=>[i+1,`${w.n} · ${w.h1&&w.h2?'1M d6 / 2M d8':w.h1||w.h2}${w.ranged?' + 15 flechas':''}`])),
+ choices:[{label:'🎲 Tirar 1d6',fn:()=>ask({title:'Arma',table:'Armas (d6)',dice:'1d6',onResult:setWeapon})},...WEAP.slice(1).map((w,i)=>({label:`${i+1}. ${w.n}`,cls:'ghost',fn:()=>setWeapon(i+1)}))]});}
+function cSupplies(){ask({title:'Paso 7 · Suministros',table:'Recursos iniciales',dice:'2d6',text:'Tira 2d6: eliges (o tiras) esa cantidad de suministros.',
+ onResult:n=>{log('Suministros',`${n} suministros`);show({title:'Suministros',table:'Recursos iniciales',roll:n,text:`Obtienes <b>${n}</b> suministros.`,choices:[{label:'Elegir el primero',fn:()=>cSupply(1,n)}]});}});}
+function supOptions(){return Object.entries(SUP).map(([k,[n]])=>`<option value="${k}">${k} · ${esc(n)}</option>`).join('');}
+function cSupply(i,n){const nx=()=>i<n?cSupply(i+1,n):cSeason();
+ show({title:`Suministro ${i} de ${n}`,table:'Suministros (d66)',text:`Tira d66 (un d6 para las decenas y otro para las unidades) o elige de la lista.<select id="sup" style="margin-top:8px">${supOptions()}</select>`,
+  choices:[{label:'🎲 Tirar d66',fn:()=>ask({title:`Suministro ${i} de ${n}`,table:'Suministros (d66)',dice:'d66',hint:'decenas y unidades',onResult:v=>{const nm=applySupply(v);log('Suministros (d66)',`${v}: ${nm}`);save();msg('Suministro','Suministros (d66)',`<p class="big">${esc(nm)}</p>`,nx,'Siguiente',{roll:v});}})},
+   {label:'Añadir el seleccionado',cls:'ghost',fn:()=>{const v=+$('#sup').value;const nm=applySupply(v);log('Suministros',`Elegido: ${nm}`);save();nx();}}]});}
+function chooseSeason(next,step){show({title:`${step||''}Estación`,table:'Estación (d4)',text:'¿En qué estación empieza el viaje?'+tbl(nrows(SEASONS)),
+ choices:[{label:'🎲 Tirar 1d4',fn:()=>ask({title:'Estación',table:'Estación (d4)',dice:'1d4',onResult:v=>{ch().season=SEASONS[v-1];log('Estación',SEASONS[v-1]);save();msg('Estación','Estación (d4)',`<p class="big">${SEASONS[v-1]}</p>`,next,'Continuar',{roll:v});}})},
+  ...SEASONS.map(s=>({label:s,cls:'ghost',fn:()=>{ch().season=s;log('Estación',s);save();next();}}))]});}
+function cSeason(){chooseSeason(cTerrain,'Paso 8 · ');}
+function cTerrain(){ask({title:'Paso 8 · Terreno del primer hexágono',table:'Terreno (d6)',dice:'1d6',text:'Se sugiere empezar en el Sur y viajar al Norte, hacia las Montañas Heladas.'+tbl(nrows(TERR)),
+ onResult:v=>{ch().terrain=v-1;log('Terreno inicial',TERR[v-1]);save();msg('Terreno inicial','Terreno (d6)',`<p class="big">${TERR[v-1]}</p>`,cDone,'Terminar',{roll:v});}});}
+function cDone(){const c=ch();c.created=true;S.turn=null;CURS.turn=null;save();
+ show({title:`¡${c.name||'Tu enano'} está listo!`,table:'Hoja de personaje',text:sheetSummary(c),choices:[{label:'🗺️ Ir a la Guía de turnos',fn:()=>go('turn')},{label:'📜 Ver hoja completa',cls:'ghost',fn:()=>go('sheet')}]});}
+function sheetSummary(c){return `<table class="t sheet">
+ <tr><td>Nombre</td><td>${esc(c.name)}${c.trait?` · ${esc(c.trait)}`:''}</td></tr>
+ <tr><td>Origen</td><td>${c.bg?esc(BG_SHORT[c.bg-1]):'—'}</td></tr>
+ ${AK.map(a=>`<tr><td>${a.toUpperCase()}</td><td>${fmt(c[a])}${c.raw&&c.raw[a]?` (${c.raw[a]})`:''} · ${ATTR[a]}</td></tr>`).join('')}
+ <tr><td>PV</td><td>${c.hp}/${c.hpMax}</td></tr><tr><td>Armad.</td><td>${esc(c.armorName)} (−${c.armorRed})${c.dexPen?` · −${c.dexPen} DES`:''}</td></tr>
+ <tr><td>Arma</td><td>${esc(c.weapon.n)} ${c.weapon.die}${c.weapon.plus?' +1':''}</td></tr>
+ <tr><td>Oro</td><td>${c.gold}</td></tr><tr><td>Víveres</td><td>${c.rations} raciones · ${c.mushrooms} hongos</td></tr>
+ <tr><td>Equipo</td><td>${c.items.map(i=>esc(i.n)+(i.q>1?` ×${i.q}`:'')).join(', ')||'—'}</td></tr>
+ <tr><td>Viaje</td><td>${c.season||'—'} · ${c.terrain!=null?TERR[c.terrain]:'—'}</td></tr></table>`;}
+function createdSummary(){const c=ch();show({title:c.name||'Tu enano',table:'Hoja de personaje',text:sheetSummary(c),choices:[{label:'🗺️ Ir a la Guía de turnos',fn:()=>go('turn')},{label:'Crear un enano nuevo (reemplaza al actual)',cls:'ghost',fn:()=>{if(confirm('¿Crear un personaje nuevo? Se perderá el actual.'))createIntro();}}]});}
+
+/* ================= GUÍA DE TURNOS ================= */
+function turnForm(){const c=ch()||blankChar();setCur({k:'fn',fn:turnForm});
+ const num=(id,l,v,mn,mx)=>`<label>${l}<input type="number" id="f_${id}" value="${v}" min="${mn}" max="${mx}" inputmode="numeric"></label>`;
+ const cb=(id,l,v)=>`<label class="chk"><input type="checkbox" id="f_${id}" ${v?'checked':''}> ${l}</label>`;
+ stage().innerHTML=`<div class="card">${head({title:'Características del personaje',table:'Hoja de personaje'})}
+ <p class="txt">Estos valores se usan como modificadores en cada tirada. ${c.created?'Se cargaron de tu personaje; ajústalos si hace falta.':'Si no creaste el personaje aquí, cópialos de tu hoja.'}</p>
+ <div class="grid"><label class="wide">Nombre<input id="f_name" value="${esc(c.name)}"></label>
+ ${num('str','Fuerza (mod.)',c.str,-3,5)}${num('dex','Destreza (mod.)',c.dex,-3,5)}${num('con','Constitución (mod.)',c.con,-3,5)}${num('pre','Presencia (mod.)',c.pre,-3,5)}
+ ${num('hp','PV actuales',c.hp,0,99)}${num('hpMax','PV máximos',c.hpMax||1,1,99)}
+ <label class="wide">Armadura<select id="f_armor">${ARMOR.map((a,i)=>`<option value="${i}" ${i===c.armor?'selected':''}>${a.n} (−${a.red}${a.pen?`, −${a.pen} DES`:''})</option>`).join('')}</select></label>
+ ${cb('xshield','Además llevo escudo (−1 extra)',c.extraShield)}
+ <label class="wide">Arma<input id="f_wn" value="${esc(c.weapon.n)}"></label>
+ <label>Dado de daño<select id="f_wd">${['d4','d6','d8','d10','d12'].map(d=>`<option ${d===c.weapon.die?'selected':''}>${d}</option>`).join('')}</select></label>
+ ${num('wplus','Bonif. de arma',c.weapon.plus||0,0,3)}
+ ${num('gold','Oro',c.gold,0,99999)}${num('rations','Raciones',c.rations,0,99)}${num('mushrooms','Hongos',c.mushrooms,0,4)}${num('merriment','Juerga',c.merriment,0,3)}
+ <label>Estación<select id="f_season">${SEASONS.map(s=>`<option ${s===c.season?'selected':''}>${s}</option>`).join('')}</select></label>
+ <label>Terreno actual<select id="f_terrain"><option value="">Por definir</option>${TERR.map((t,i)=>`<option value="${i}" ${i===c.terrain?'selected':''}>${t}</option>`).join('')}</select></label>
+ ${num('day','Día',c.day,1,999)}${num('level','Nivel',c.level,1,30)}
+ ${cb('wr','El arma es a distancia',c.weapon.ranged)}${cb('bow','Tengo arco (caza)',c.hasBow)}${cb('rod','Tengo caña (pesca)',c.hasRod)}
+ ${cb('poison','Envenenado (−1)',c.poisoned)}${cb('wound','Herido (−1)',c.wounded)}${cb('hungry','Sin comer (−1)',c.hungry)}
+ </div><div class="choices"><button class="btn" id="fgo">${S.turn&&S.turn.phase?'Guardar y continuar el turno':'Guardar y comenzar el día'}</button></div><div id="err" class="err"></div></div>`;
+ $('#fgo').onclick=()=>{const v=id=>$('#f_'+id).value,n=id=>parseInt(v(id),10)||0,b=id=>$('#f_'+id).checked;
+  c.name=v('name').trim()||'Enano';AK.forEach(a=>c[a]=clamp(n(a),-3,5));c.hpMax=Math.max(1,n('hpMax'));c.hp=clamp(n('hp'),0,c.hpMax);
+  const ai=n('armor'),a=ARMOR[ai];c.armor=ai;c.armorName=a.n;c.extraShield=b('xshield');c.armorRed=a.red+(c.extraShield&&!a.shield?1:0);c.dexPen=a.pen;
+  c.weapon={n:v('wn').trim()||'Arma',die:v('wd'),ranged:b('wr'),plus:clamp(n('wplus'),0,3)};
+  c.gold=Math.max(0,n('gold'));c.rations=Math.max(0,n('rations'));c.mushrooms=clamp(n('mushrooms'),0,4);c.merriment=clamp(n('merriment'),0,3);
+  c.season=v('season');c.terrain=v('terrain')===''?null:+v('terrain');c.day=Math.max(1,n('day'));c.level=Math.max(1,n('level'));
+  c.hasBow=b('bow');c.hasRod=b('rod');c.poisoned=b('poison');c.wounded=b('wound');c.hungry=b('hungry');c.created=true;S.char=c;save();
+  if(S.turn&&S.turn.phase)resumeTurn();else dayStart();};}
+function resumeTurn(){const t=S.turn||{};const map={ration:dRation,plan:dPlan,hex:dHex,cave:dCave,forage:forageMenu,camp:campMenu};
+ if(t.w&&map[t.phase])return map[t.phase]();dayStart();}
+
+function dayStart(){const c=ch();S.turn={phase:'dayStart'};c.dayMods=c.nextMods||{};c.nextMods={};S.turn.half=!!c.nextHalf;c.nextHalf=false;save();
+ if(!c.season)return chooseSeason(dayStart);
+ const intro=`<p>Día <b>${c.day}</b> · ${c.season} · ${c.terrain!=null?TERR[c.terrain]:'terreno por definir'}</p>
+ <ol class="proc"><li>Tirar el clima</li><li>Consumir una ración</li><li>Hexágono 1: terreno → punto de interés → encuentro</li><li>Hexágono 2: terreno → punto de interés → encuentro</li><li>Acampar y encuentro nocturno</li></ol>
+ ${S.turn.half?'<p class="warn">Resaca: hoy viajas a velocidad ½.</p>':''}${Object.keys(c.dayMods).length?`<p class="warn">Efectos de hoy: ${Object.entries(c.dayMods).map(([k,v])=>`${ATTR[k]} ${fmt(v)}`).join(', ')}</p>`:''}`;
+ if(c.poisoned)return show({title:`Día ${c.day}`,table:'Procedimiento diario',text:intro+'<p class="warn">Estás envenenado: puedes intentar superarlo con una prueba de CON DR14.</p>',
+  choices:[{label:'Probar CON DR14',fn:()=>test({title:'Superar el veneno',table:'Envenenado',attr:'con',dr:14,onDone:ok=>{if(ok){c.poisoned=false;save();}msg(ok?'Te recuperas del veneno':'Sigues envenenado','Envenenado',ok?'Ya no sufres el −1.':'Mañana podrás volver a intentarlo.',dWeather,'1 · Tirar el clima');}})}]});
+ show({title:`Día ${c.day}`,table:'Procedimiento diario',text:intro,choices:[{label:'1 · Tirar el clima',fn:dWeather}]});}
+function weatherFx(w){const f=w.forage==='X'?'no se puede forrajear':w.forage?`forrajeo ${fmt(w.forage)}`:'forrajeo sin modificador';
+ const s=w.speed==='X'?'<span class="warn">No puedes viajar. ¡Busca una cueva YA!</span>':w.speed==='½'?'Velocidad ½: solo 1 hexágono hoy.':'Velocidad normal: 2 hexágonos.';return `<p>${s}<br>${f[0].toUpperCase()+f.slice(1)}.</p>`;}
+function wRows(s){return WEATHER[s].map((w,i)=>[i+1,`${w.n} · ${w.speed==='X'?'no viajas':w.speed==='½'?'viaje ½':'viaje normal'} · ${w.forage==='X'?'sin forrajeo':'forrajeo '+fmt(w.forage)}`]);}
+function dWeather(){const c=ch();S.turn.phase='weather';save();
+ ask({title:'1 · Clima del día',table:`Clima — ${c.season}`,dice:'1d6',text:tbl(wRows(c.season)),onResult:v=>{const w=WEATHER[c.season][v-1];S.turn.w=w;log(`Clima — ${c.season}`,`${v}: ${w.n}`);
+  show({title:'Clima',table:`Clima — ${c.season}`,roll:v,text:`<p class="big">${w.n}</p>${weatherFx(w)}${tbl(wRows(c.season),v)}`,choices:[{label:'2 · Consumir ración',fn:dRation}]});}});}
+function dRation(){const c=ch();S.turn.phase='ration';save();
+ const after=()=>S.turn.w.speed==='X'?dCave():dPlan();
+ if(c.rations>0)return show({title:'2 · Consumir ración',table:'Raciones',text:`Tienes <b>${c.rations}</b> raciones. Una ración te sostiene un día. Si no comes, −1 a todas las pruebas hasta que comas.`,
+  choices:[{label:'Comer 1 ración',fn:()=>{c.rations--;c.hungry=false;log('Ración',`Comes 1 ración (quedan ${c.rations})`);after();}},{label:'No comer hoy',cls:'ghost',fn:()=>{c.hungry=true;log('Ración','No comes: −1 a las pruebas');after();}}]});
+ c.hungry=true;log('Ración','Sin raciones: −1 a las pruebas');msg('2 · Sin raciones','Raciones','<p class="warn">No tienes raciones: −1 a todas las pruebas hasta que comas.</p>Intenta forrajear, cazar o pescar hoy.',after);}
+function dCave(){S.turn.phase='cave';save();
+ show({title:'¡Busca una cueva YA!',table:'Encontrar una cueva',text:'El clima es severo y no puedes viajar. Si ya estás en un refugio sólido (asentamiento o edificio) no necesitas cueva.',
+  choices:[{label:'🎲 Buscar cueva (1d6)',fn:()=>ask({title:'Encontrar una cueva',table:'Encontrar una cueva',dice:'1d6',text:tbl([['1','No la encuentras a tiempo: 1d4 de daño y pierdes un objeto al azar'],['2–6','Encuentras una cueva: pasas allí el día y la noche → Encuentros en cueva']]),
+   onResult:v=>{if(v===1){log('Encontrar una cueva','1: no la encuentras');return ask({title:'Daño por la tormenta',table:'Encontrar una cueva',dice:'1d4',text:'No encontraste refugio. Tira el daño y tacha un objeto al azar de tu equipo.',onResult:d=>hurt(d,'Tormenta',()=>dCamp(false),'Pierdes un objeto al azar (bórralo en la Hoja).')});}
+    log('Encontrar una cueva',`${v}: encuentras una cueva`);S.turn.inCave=true;save();caveEnc(()=>dCamp(true));}})},
+   {label:'Ya estoy a cubierto',cls:'ghost',fn:()=>{S.turn.inCave=true;dCamp(true);}}]});}
+function caveEnc(after){ask({title:'Encuentros en cueva',table:'Encuentros en cueva (d6)',dice:'1d6',text:tbl(nrows(CAVE)),onResult:v=>{log('Encuentros en cueva',`${v}: ${CAVE[v-1]}`);
+ const acts=[[{label:'🗝️ Explorar la cueva (mazmorra)',fn:()=>dungeon(after)}],[{label:'⚔️ Combatir al Oso',fn:()=>combatSetup('bear','1',after)},{label:'🗣️ Intentar evitarlo (Oráculo)',cls:'ghost',fn:after}],[{label:'⚔️ Combatir a los Murciélagos',fn:()=>combatSetup('bats','2d6',after)}],
+  [{label:'🗣️ Reacción del extraño (d10)',fn:()=>reaction(after,'Alguien más está en la cueva')}],[{label:'🎲 Suministro (d66)',fn:()=>supplyRoll(after)}],[{label:'Continuar',fn:after}]][v-1];
+ show({title:'Encuentro en cueva',table:'Encuentros en cueva (d6)',roll:v,text:`<p class="big">${CAVE[v-1]}</p>`,choices:acts});}});}
+function dPlan(){const t=S.turn;t.phase='plan';save();const w=t.w,half=w.speed==='½'||t.half,n=half?1:2,canF=w.forage!=='X';
+ show({title:'3 · Plan del día',table:'Viaje',text:`Puedes avanzar <b>${n}</b> hexágono${n>1?'s':''} hoy${half?' (velocidad ½)':''}. Si forrajeas solo avanzas 1.${canF?'':'<br><span class="warn">El clima no permite forrajear.</span>'}<br>Con arco o caña puedes cazar o pescar además de forrajear.<br>Se tiran terreno, punto de interés y encuentro <b>por cada hexágono</b>.`,
+  choices:[{label:`Viajar ${n} hexágono${n>1?'s':''}`,fn:()=>startHexes(n,false)},...(canF?[{label:'Forrajear y viajar 1 hexágono',cls:'ghost',fn:()=>startHexes(1,true)}]:[]),{label:'No viajar hoy',cls:'ghost',fn:()=>{t.hexTotal=0;t.hexIdx=0;t.forage=canF;save();afterHexes();}}]});}
+function startHexes(n,f){const t=S.turn;t.hexTotal=n;t.hexIdx=0;t.forage=f;save();dHex();}
+function dHex(){const t=S.turn,c=ch();t.phase='hex';save();const k=t.hexIdx+1,title=`Hexágono ${k} de ${t.hexTotal} · Terreno`;
+ const done=(r,txt,table)=>show({title:'Terreno',table,roll:r,text:txt,choices:[{label:'Buscar punto de interés',fn:dPOI}]});
+ if(c.terrain==null)return ask({title,table:'Terreno (d6)',dice:'1d6',text:tbl(nrows(TERR)),onResult:v=>{c.terrain=v-1;log('Terreno',TERR[v-1]);done(v,`Estás en <b>${TERR[v-1]}</b>.`,'Terreno (d6)');}});
+ ask({title,table:'Hexágono adicional (d6)',dice:'1d6',text:`Terreno anterior: <b>${TERR[c.terrain]}</b>`+tbl([['1–3','Mismo terreno que el anterior'],['4–6','Tira terreno nuevo']]),onResult:v=>{
+  if(v<=3){log('Hexágono adicional',`${v}: sigues en ${TERR[c.terrain]}`);return done(v,`Sigues en <b>${TERR[c.terrain]}</b>.`,'Hexágono adicional (d6)');}
+  log('Hexágono adicional',`${v}: terreno nuevo`);ask({title:'Terreno nuevo',table:'Terreno (d6)',dice:'1d6',text:tbl(nrows(TERR)),onResult:x=>{c.terrain=x-1;log('Terreno',TERR[x-1]);done(x,`Entras en <b>${TERR[x-1]}</b>.`,'Terreno (d6)');}});}});}
+function dPOI(){ask({title:'¿Punto de interés?',table:'Punto de interés (comprobación d6)',dice:'1d6',text:tbl([['1–3','Nada'],['4–6','Tira d100 en la tabla de Puntos de Interés']]),onResult:v=>{log('POI (comprobación)',`${v}: ${v<=3?'nada':'sí'}`);
+ if(v<=3)return msg('Sin punto de interés','Punto de interés (comprobación d6)','Nada destacable en este hexágono.',dEnc,'¿Encuentro?',{roll:v});
+ ask({title:'Punto de interés',table:'Puntos de Interés (d100)',dice:'d100',onResult:p=>{log('Puntos de Interés (d100)',`${p}: ${POI[p-1]}`);poiResult(p,dEnc);}});}});}
+function poiResult(p,next){const name=POI[p-1],low=name.toLowerCase(),acts=[];const back=()=>poiResult(p,next);
+ if(low.includes('asentamiento'))acts.push({label:'🏘️ Visitar el asentamiento',fn:()=>settlement(next)});
+ if(low.includes('metrópolis'))acts.push({label:'🏙️ Visitar la metrópolis (ciudad)',fn:()=>settlement(next,3)});
+ if(/posada|cantina/.test(low))acts.push({label:'🍺 Entrar (posada)',fn:()=>settlement(next,0)});
+ if(/mercaderes/.test(low))acts.push({label:'🛒 Comerciar',fn:()=>shop(back)});
+ if(/cueva|mina|ruinas|castillo|mansión|guarida|túmulo|abadía|templo|convento|agujero|entrada|torre|atalaya|aldea abandonada|sumidero/.test(low))acts.push({label:'🗝️ Explorar (mazmorra)',fn:()=>dungeon(next)});
+ if(/tesoro enterrado/.test(low))acts.push({label:'💰 Desenterrar (Tesoro d20)',fn:()=>treasure(next)});
+ if(/3d6 monedas/.test(low))acts.push({label:'🪙 Recoger el oro (3d6)',fn:()=>ask({title:'Oro manchado de sangre',table:'Puntos de Interés',dice:'3d6',onResult:g=>{ch().gold+=g;log('Oro',`+${g}`);msg('Oro','Puntos de Interés',`Ganas <b>${g}</b> de oro.`,next,'Continuar',{roll:g});}})});
+ if(/campamento con 1d4/.test(low))acts.push({label:'🎒 Revisar el campamento (1d4 objetos)',fn:()=>ask({title:'¿Cuántos objetos?',table:'Puntos de Interés',dice:'1d4',onResult:n=>supplyLoop(n,next)})});
+ if(/hongos|hongo/.test(low))acts.push({label:'🍄 Recoger un hongo',fn:()=>{gainMush(1);log('Hongos','+1');save();next();}});
+ const det=detect(name);if(det)acts.push({label:`⚔️ Combatir (${BEAST[det.key].n})`,fn:()=>combatSetup(det.key,det.count,next)});
+ acts.push({label:'Continuar: ¿Encuentro?',cls:acts.length?'ghost':'',fn:next});
+ show({title:'Punto de interés',table:'Puntos de Interés (d100)',roll:p,text:`<p class="big">${esc(name)}</p><p>Descríbelo a tu manera. Para dudas («¿hay alguien dentro?») usa el Oráculo en Herramientas.</p>`,choices:acts});}
+function dEnc(){ask({title:'¿Encuentro?',table:'Encuentro (comprobación d6)',dice:'1d6',text:tbl([['1–3','Nada'],['4–6','Tira d20 en la tabla del terreno actual']]),onResult:v=>{log('Encuentro (comprobación)',`${v}: ${v<=3?'nada':'sí'}`);
+ if(v<=3)return msg('Camino tranquilo','Encuentro (comprobación d6)','No te cruzas con nadie.',finishHex,'Continuar',{roll:v});
+ const tr=ch().terrain??0,table=`Encuentros — ${TERR[tr]} (d20)`;
+ ask({title:'Encuentro',table,dice:'1d20',onResult:e=>{const txt=ENC[tr][e-1];log(table,`${e}: ${txt}`);encounterResult(txt,table,e,finishHex);}});}});}
+function encounterResult(txt,table,r,next){const low=txt.toLowerCase(),acts=[],det=detect(txt),back=()=>encounterResult(txt,table,r,next);
+ if(/arma aleatoria/.test(low))acts.push({label:'🎲 ¿Qué arma? (1d6)',fn:()=>ask({title:'Arma encontrada',table:'Armas (d6)',dice:'1d6',onResult:v=>{const w=WEAP[v];addItem(w.n);if(w.ranged)ch().hasBow=true;log('Armas (d6)',w.n);msg('Arma encontrada','Armas (d6)',`<p class="big">${w.n}</p>Añadida a tu equipo. Cámbiala en la Hoja si quieres empuñarla.`,next,'Continuar',{roll:v});}})});
+ else if(/pieza de armadura/.test(low))acts.push({label:'🎲 ¿Qué armadura? (1d4)',fn:()=>ask({title:'Armadura encontrada',table:'Armadura (d4)',dice:'1d4',onResult:v=>{addItem(ARMOR[v].n);log('Armadura (d4)',ARMOR[v].n);msg('Armadura encontrada','Armadura (d4)',`<p class="big">${ARMOR[v].n}</p>Añadida al equipo. Si la equipas, actualízala en Características.`,next,'Continuar',{roll:v});}})});
+ else if(/suministro/.test(low))acts.push({label:'🎲 Suministro (d66)',fn:()=>supplyRoll(next)});
+ else if(/1d4 hongos/.test(low))acts.push({label:'🍄 ¿Cuántos hongos? (1d4)',fn:()=>ask({title:'Hongos',table:'Encuentros',dice:'1d4',onResult:v=>{gainMush(v);log('Hongos',`+${v}`);msg('Hongos','Encuentros',`Recoges ${v} (máximo ${maxMush()}). Tienes ${ch().mushrooms}.`,next,'Continuar',{roll:v});}})});
+ else if(/cofre/.test(low))acts.push({label:'💰 Abrir el cofre (Tesoro d20)',fn:()=>treasure(next)});
+ else if(/mercader/.test(low)&&!/robando|atacando/.test(low))acts.push({label:'🛒 Comerciar',fn:()=>shop(back)});
+ if(/pergamino/.test(low))acts.push({label:'📜 Comprar su pergamino (200g)',fn:()=>buyScroll(back)});
+ if(det)acts.push({label:`⚔️ Combatir (${BEAST[det.key].n}${det.count!=='1'?` · ${det.count}`:''})`,fn:()=>combatSetup(det.key,det.count,next)});
+ acts.push({label:'🗣️ Reacción (d10)',cls:'ghost',fn:()=>reaction(back,txt)});
+ if(!det)acts.push({label:'⚔️ Combatir (elegir criatura)',cls:'ghost',fn:()=>combatSetup(null,'1',next)});
+ acts.push({label:'Seguir el camino',cls:'ghost',fn:next});
+ show({title:'Encuentro',table,roll:r,text:`<p class="big">${esc(txt)}</p><p>Decide cómo actuar: si puede hablar, tira Reacción; para preguntas abiertas usa el Oráculo (Herramientas).</p>`,choices:acts});}
+function finishHex(){const t=S.turn,c=ch();t.hexIdx++;c.hexes=(c.hexes||0)+1;save();if(t.hexIdx<t.hexTotal)dHex();else afterHexes();}
+function afterHexes(){if(S.turn.forage)forageMenu();else dCamp(false);}
+
+/* ---------- Forrajeo, caza y pesca ---------- */
+function forageMenu(){const t=S.turn,c=ch(),w=t.w;t.phase='forage';save();const acts=[];
+ if(!t.foraged&&w.forage!=='X')acts.push({label:'🌿 Forrajear (1d6)',fn:forage});
+ if(c.hasBow&&w.forage!=='X'&&!t.hunted)acts.push({label:'🏹 Cazar',fn:hunt});
+ if(c.hasRod&&!t.fished)acts.push({label:'🎣 Pescar',fn:()=>{t.fished=true;save();fish();}});
+ acts.push({label:'⛺ Ir al campamento',cls:'ghost',fn:()=>dCamp(false)});
+ show({title:'Recolección',table:'Forrajeo / Caza / Pesca',text:`Clima: <b>${w.n}</b> · modificador al forrajeo: ${w.forage==='X'?'no se puede':fmt(w.forage)}${hasAb('forage')?' (+2 por habilidad)':''}.<br>Raciones: <b>${c.rations}</b>${c.hasRod?'<br>Para pescar necesitas agua cerca (río, lago, estanque, costa).':''}${!c.hasBow&&!c.hasRod?'<br><small>Sin arco ni caña no puedes cazar ni pescar.</small>':''}`,choices:acts});}
+function forage(){const t=S.turn,c=ch(),mod=(t.w.forage||0)+(hasAb('forage')?2:0);t.foraged=true;save();
+ ask({title:'Forrajear',table:'Forrajeo (d6)',dice:'1d6',text:`Modificador del clima${hasAb('forage')?' y habilidad':''}: <b>${fmt(mod)}</b> (se aplica después de tirar).`+tbl(FORAGE.map((f,i)=>[i+1,`${f[0]}${f[1]?` · ${f[1]} ración(es)`:''}`])),onResult:v=>{
+  const r=clamp(v+mod,1,6),f=FORAGE[r-1];if(r===6)gainMush(1);c.rations+=f[1];log('Forrajeo (d6)',`${v}${fmt(mod)} → ${r}: ${f[0]}`);save();
+  show({title:'Forrajeo',table:'Forrajeo (d6)',roll:v,text:`${v} ${fmt(mod)} = <b>${r}</b><p class="big">${f[0]}</p>${f[1]?`+${f[1]} ración(es). Tienes ${c.rations}.`:r===6?`+1 hongo (${c.mushrooms}/${maxMush()}).`:''}${tbl(FORAGE.map((f,i)=>[i+1,f[0]]),r)}`,choices:[{label:'Continuar',fn:forageMenu}]});}});}
+const GAME={3:['Conejo',1],4:['Ciervo',2],5:['Jabalí',3]};
+function hunt(){S.turn.hunted=true;save();
+ ask({title:'Caza · Rastros',table:'Caza · Rastros de caza (d6)',dice:'1d6',text:tbl(nrows(SIGNS)),onResult:v=>{log('Rastros de caza',`${v}: ${SIGNS[v-1]}`);
+  if(v===1)return msg('Sin rastros','Caza · Rastros de caza (d6)','No hay señales de caza hoy.',forageMenu,'Continuar',{roll:v});
+  if(v===2)return huntEnc1();if(v===6)return supplyRoll(forageMenu);
+  msg(`Rastro de ${GAME[v][0].toLowerCase()}`,'Caza · Rastros de caza (d6)',SIGNS[v-1],()=>trail(GAME[v]),'Seguir el rastro (1d6)',{roll:v});}});}
+function trail(g){ask({title:`Rastreo: ${g[0]}`,table:'Caza · Rastreo (d6)',dice:'1d6',text:tbl(nrows(TRAIL)),onResult:v=>{log('Rastreo',`${v}: ${TRAIL[v-1]}`);
+ if(v===1)return msg('Pierdes el rastro','Caza · Rastreo (d6)','La presa se te escapa.',forageMenu,'Continuar',{roll:v});
+ if(v===2)return huntEnc2(g);shoot(g,[0,0,14,12,10,8][v-1]);}});}
+function shoot(g,dr){test({title:`¡Disparas al ${g[0].toLowerCase()}!`,table:'Caza · Disparo',attr:'pre',dr,onDone:ok=>{const c=ch();if(ok){c.rations+=g[1];log('Caza',`${g[0]}: +${g[1]} raciones`);save();}
+ msg(ok?`¡Cazas un ${g[0].toLowerCase()}!`:'Fallas el tiro','Caza · Rendimiento',ok?`+${g[1]} ración(es). Tienes ${c.rations}.`+tbl([['Conejo','1 ración'],['Ciervo','2 raciones'],['Jabalí','3 raciones']]):'La presa huye.',forageMenu);}});}
+function huntEnc1(){ask({title:'Encuentro de caza',table:'Encuentros de caza 1 (d4)',dice:'1d4',text:tbl(nrows(HUNT1)),onResult:v=>{log('Encuentros de caza 1',HUNT1[v-1]);
+ const a=[[{label:'🗝️ Seguir la sangre (mazmorra)',fn:()=>dungeon(forageMenu)}],[{label:'⚔️ Atacar a los furtivos',fn:()=>combatSetup('poacher','1d4',forageMenu)},{label:'🗣️ Reacción (d10)',cls:'ghost',fn:()=>reaction(forageMenu,HUNT1[1])}],[{label:'🐕 Intentar que te acompañe (PRE DR12)',fn:()=>companion('Perro',forageMenu)}],[{label:'⚔️ ¡Combatir!',fn:()=>combatSetup('goblin','1',forageMenu)}]][v-1];
+ a.push({label:'Continuar',cls:'ghost',fn:forageMenu});show({title:'Encuentro de caza',table:'Encuentros de caza 1 (d4)',roll:v,text:`<p class="big">${HUNT1[v-1]}</p>`,choices:a});}});}
+function huntEnc2(g){ask({title:'Encuentro de caza',table:'Encuentros de caza 2 (d4)',dice:'1d4',text:tbl(nrows(HUNT2)),onResult:v=>{log('Encuentros de caza 2',HUNT2[v-1]);
+ const c=ch();let a;
+ if(v===1)a=[{label:'⚔️ Disputarle la presa al oso',fn:()=>combatSetup('bear','1',()=>{c.rations+=g[1];save();forageMenu();})}];
+ else if(v===2)a=[{label:'⚔️ Combatir al furtivo',fn:()=>combatSetup('poacher','1',forageMenu)},{label:'🗣️ Reacción (d10)',cls:'ghost',fn:()=>reaction(forageMenu,HUNT2[1])}];
+ else if(v===3){c.rations+=g[1];save();log('Caza',`${g[0]}: +${g[1]} raciones`);a=[{label:'🐈 Intentar que te acompañe (PRE DR12)',fn:()=>companion('Gato',forageMenu)}];}
+ else a=[{label:'🏹 Disparar (PRE DR8)',fn:()=>shoot(g,8)}];
+ a.push({label:'Continuar',cls:'ghost',fn:forageMenu});show({title:'Encuentro de caza',table:'Encuentros de caza 2 (d4)',roll:v,text:`<p class="big">${HUNT2[v-1]}</p>${v===3?`+${g[1]} ración(es).`:''}`,choices:a});}});}
+function fish(){ask({title:'Lanzas la caña',table:'Pesca · Lanzar (d6)',dice:'1d6',text:tbl(nrows(CAST)),onResult:v=>{log('Pesca',`${v}: ${CAST[v-1]}`);
+ if(v===1)return msg('Nada','Pesca · Lanzar (d6)','Ni un mordisco.',forageMenu,'Continuar',{roll:v});if(v===2)return fishEnc1();if(v===6)return supplyRoll(forageMenu);reel();}});}
+function reel(){ask({title:'¡Pican! Recoger',table:'Pesca · Recoger (d6)',dice:'1d6',text:tbl(nrows(REEL)),onResult:v=>{log('Recoger',`${v}: ${REEL[v-1]}`);
+ if(v<=2)return msg(REEL[v-1],'Pesca · Recoger (d6)','Mala suerte.',forageMenu,'Continuar',{roll:v});if(v===3)return fishEnc2();
+ const f={4:['Bagre',12,3],5:['Trucha',10,2],6:['Perca',8,1]}[v];
+ test({title:`¡Es un ${f[0].toLowerCase()}! Recógelo`,table:'Pesca · Recoger',attr:'str',dr:f[1],onDone:ok=>{const c=ch();if(ok){c.rations+=f[2];log('Pesca',`${f[0]}: +${f[2]}`);save();}msg(ok?`¡Pescas un ${f[0].toLowerCase()}!`:'Se suelta','Pesca · Rendimiento',ok?`+${f[2]} ración(es). Tienes ${c.rations}.`:'El pez rompe a escapar.',forageMenu);}});}});}
+function fishEnc1(){ask({title:'Encuentro de pesca',table:'Encuentros de pesca 1 (d4)',dice:'1d4',text:tbl(nrows(FISH1)),onResult:v=>{log('Encuentros de pesca 1',FISH1[v-1]);
+ const a=[[{label:'Esquivar (DES DR12)',fn:()=>test({title:'¡Un rayo!',table:'Encuentros de pesca 1',attr:'dex',dr:12,onDone:ok=>ok?msg('Esquivas','Encuentros de pesca 1','Te apartas a tiempo.',forageMenu):ask({title:'Daño del rayo',table:'Encuentros de pesca 1',dice:'1d4',onResult:d=>hurt(d,'Rayo',forageMenu)})})}],
+  [{label:'🗣️ Reacción (d10)',fn:()=>reaction(forageMenu,FISH1[1])},{label:'⚔️ Combatir',cls:'ghost',fn:()=>combatSetup(null,'1',forageMenu)}],[{label:'🎣 Lanzar otra vez',fn:fish}],
+  [{label:'🤿 Bucear (CON DR12)',fn:()=>test({title:'Bucear hasta el cofre',table:'Encuentros de pesca 1',attr:'con',dr:12,onDone:ok=>ok?treasure(forageMenu):msg('No llegas','Encuentros de pesca 1','El cofre queda fuera de tu alcance.',forageMenu)})}]][v-1];
+ a.push({label:'Continuar',cls:'ghost',fn:forageMenu});show({title:'Encuentro de pesca',table:'Encuentros de pesca 1 (d4)',roll:v,text:`<p class="big">${FISH1[v-1]}</p>`,choices:a});}});}
+function fishEnc2(){ask({title:'Encuentro de pesca',table:'Encuentros de pesca 2 (d4)',dice:'1d4',text:tbl(nrows(FISH2)),onResult:v=>{const c=ch();log('Encuentros de pesca 2',FISH2[v-1]);
+ if(v===1)return show({title:'¡Un goblin!',table:'Encuentros de pesca 2 (d4)',roll:v,text:FISH2[0],choices:[{label:'⚔️ ¡Combatir!',fn:()=>combatSetup('goblin','1',forageMenu)},{label:'Dejarlo ir',cls:'ghost',fn:forageMenu}]});
+ if(v===2)return test({title:'¡Una piraña!',table:'Encuentros de pesca 2',attr:'dex',dr:10,onDone:ok=>{if(!ok){c.wounded=true;save();}msg(ok?'Conservas tus dedos':'Pierdes un dedo','Encuentros de pesca 2',ok?'La sueltas a tiempo.':'<span class="warn">Herido: −1 a todo hasta que te cure un sanador o la magia.</span>',forageMenu);}});
+ if(v===3){c.rations+=4;}else{c.rations+=1;c.gold+=20;}save();
+ msg('¡Buena pesca!','Encuentros de pesca 2 (d4)',v===3?'+4 raciones (dos truchas).':'+1 ración y un anillo de 20g.',forageMenu,'Continuar',{roll:v});}});}
+function companion(name,next){test({title:`¿Se une el ${name.toLowerCase()}?`,table:'Compañeros',attr:'pre',dr:12,onDone:ok=>{if(ok){addItem(`Compañero: ${name} (2d6 PV, d4)`);log('Compañeros',`${name} te acompaña`);save();}
+ msg(ok?`El ${name.toLowerCase()} te acompaña`:'No quiere seguirte','Compañeros',ok?'Compañero: 2d6 PV, ataque d4. Anótalo en tu hoja.':'Sigue su camino.',next);}});}
+
+/* ---------- Campamento ---------- */
+function dCamp(cave){const t=S.turn;t.phase='camp';if(cave)t.inCave=true;save();campMenu();}
+function campMenu(){const c=ch(),t=S.turn;t.phase='camp';save();const a=[];
+ if(c.weaponDamaged)a.push({label:'🔧 Reparar el arma',fn:()=>{c.weaponDamaged=false;log('Campamento','Reparas tu arma');campMenu();}});
+ if(c.hungry&&c.rations>0)a.push({label:'🍖 Comer una ración',fn:()=>{c.rations--;c.hungry=false;log('Ración','Comes en el campamento');campMenu();}});
+ if(c.scrolls.some(s=>!s.learned))a.push({label:'📜 Estudiar un pergamino',fn:()=>{const s=c.scrolls.find(s=>!s.learned);s.learned=true;log('Pergamino',`Aprendes ${s.n}`);msg('Pergamino aprendido','Magia',`<b>${esc(s.n)}</b> ya se puede usar (una vez, sin prueba).`,campMenu);}});
+ if(!t.merryDone)a.push({label:'🍺 Juerga (cerveza, pipa, hongo)',fn:merry});
+ a.push({label:'🌙 Dormir',fn:nightEnc});
+ show({title:'5 · Campamento',table:'Acampar',text:`${t.inCave?'Pasas la noche en la cueva.':'Montas el campamento.'} Puedes reparar el arma, fumar, beber, estudiar un pergamino y dormir. Dormir toda la noche recupera todos los PV.<br>PV <b>${c.hp}/${c.hpMax}</b> · Juerga <b>${c.merriment}</b> · Raciones <b>${c.rations}</b>`,choices:a});}
+function merry(){const t=S.turn,c=ch();t.mc=t.mc||0;t.mg=t.mg||0;
+ const add=(src,f)=>{if(f)f();t.mc++;if(t.mc>=3){c.merriment=Math.max(0,c.merriment-t.mg);t.mg=0;t.merryDone=true;log('Juerga',`${src}: ¡te pasas!`);save();return partyHard();}
+  const g=c.merriment<3?1:0;c.merriment+=g;t.mg+=g;log('Juerga',`${src}: +1 Juerga`);save();merry();};
+ show({title:'Juerga',table:'Juerga y Moderación',text:`Cada cosa consumida da 1 Juerga (gástala para +1 a un atributo en una tirada). Puedes combinar hasta 2. Con 3 o más no ganas Juerga y tiras en «Te pasaste de fiesta».<br>Consumido esta noche: <b>${t.mc}</b> · Juerga: <b>${c.merriment}/3</b>`,
+  choices:[{label:'🍺 Cerveza',fn:()=>add('Cerveza')},{label:'🌿 Pipa',fn:()=>add('Pipa')},...(c.mushrooms>0?[{label:`🍄 Hongo (gasta 1 de ${c.mushrooms})`,fn:()=>add('Hongo',()=>c.mushrooms--)}]:[]),{label:'Terminar',cls:'ghost',fn:()=>{t.merryDone=true;save();campMenu();}}]});}
+function partyHard(){const c=ch();ask({title:'¡Te pasaste de fiesta!',table:'Te pasaste de fiesta (d8)',dice:'1d8',text:tbl(PARTY.map((p,i)=>[i+1,p.t])),onResult:v=>{const p=PARTY[v-1];log('Te pasaste de fiesta',`${v}: ${p.t}`);
+ if(p.half)c.nextHalf=true;if(p.mods)Object.assign(c.nextMods,p.mods);if(p.eatAll)c.rations=0;save();
+ const after=()=>p.scroll?scrollRoll(campMenu):campMenu();msg('Te pasaste de fiesta','Te pasaste de fiesta (d8)',`<p class="big">${p.t}</p>`,after,'Continuar',{roll:v});}});}
+function nightEnc(){const t=S.turn;if(t.inCave)return sleep();
+ ask({title:'¿Pasa algo en la noche?',table:'Encuentros de campamento (comprobación d6)',dice:'1d6',text:tbl([['1–3','Tira en Encuentros de campamento (d12)'],['4–6','Noche tranquila']]),onResult:v=>{log('Noche (comprobación)',`${v}`);
+  if(v>=4)return msg('Noche tranquila','Encuentros de campamento (comprobación d6)','Duermes de un tirón.',sleep,'Amanecer',{roll:v});
+  ask({title:'Encuentro nocturno',table:'Encuentros de campamento (d12)',dice:'1d12',text:tbl(nrows(CAMP12)),onResult:e=>{const c=ch(),txt=CAMP12[e-1];log('Encuentros de campamento (d12)',`${e}: ${txt}`);const a=[];
+   if(e===5){c.merriment=Math.max(0,c.merriment-1);save();}if(e===10){c.merriment=Math.min(3,c.merriment+1);save();}
+   const det=[5,6,7,10].includes(e)?null:e===4?{key:'bear',count:'1'}:detect(txt);
+   if(e===4)a.push({label:'🎲 ¿Cuántas raciones roba? (1d4)',fn:()=>ask({title:'El oso roba',table:'Encuentros de campamento',dice:'1d4',onResult:n=>{c.rations=Math.max(0,c.rations-n);log('Oso',`Roba ${n} raciones`);save();msg('El oso se va','Encuentros de campamento',`Pierdes ${n} raciones. Quedan ${c.rations}.`,sleep);}})});
+   if(det)a.push({label:`⚔️ Combatir (${BEAST[det.key].n})`,fn:()=>combatSetup(det.key,det.count,sleep)});
+   if([2,3,12].includes(e))a.push({label:'🗣️ Reacción (d10)',cls:'ghost',fn:()=>reaction(sleep,txt)});
+   a.push({label:'Seguir durmiendo',cls:'ghost',fn:sleep});
+   show({title:'Encuentro nocturno',table:'Encuentros de campamento (d12)',roll:e,text:`<p class="big">${txt}</p>`,choices:a});}});}});}
+function sleep(){const c=ch();c.hp=c.hpMax;gainMush(1);c.day++;S.turn={phase:'dawn'};log('Descanso',`Duermes: PV al máximo y +1 hongo. Empieza el día ${c.day}.`);save();dawn();}
+function dawn(){const c=ch();show({title:'🌅 Amanece',table:'Acampar · Hongos',text:`Recuperas todos tus PV (${c.hpMax}) y ganas 1 hongo (${c.mushrooms}/${maxMush()}).<br>Llevas <b>${c.hexes||0}</b> hexágonos recorridos (el autor sugiere 20–30 días de viaje).${c.bleeding?'<p class="warn">Sigues sangrando: busca curación cuanto antes.</p>':''}<p>¿Terminó una buena sesión? Si sentiste un verdadero logro, otórgate 1 XP (código de honor).</p>`,
+ choices:[{label:`Comenzar el día ${c.day}`,fn:dayStart},{label:`⭐ Ganar 1 XP (${c.xp}/${c.level+1})`,cls:'ghost',fn:()=>gainXP(dawn)},{label:'🏔️ ¡He llegado a casa!',cls:'ghost',fn:homeArrived}]});}
+function homeArrived(){const c=ch();log('Viaje',`${c.name} llega a las Montañas el día ${c.day}`);show({title:'¡Hogar!',table:'Fin del viaje',text:`${esc(c.name)} llega a las Montañas Heladas tras ${c.day} días y ${c.hexes||0} hexágonos. El juego puede terminar aquí… o puedes reunir compañeros y volver por esa veta de Mithril o la guarida del Dragón que viste en el camino.`,choices:[{label:'Seguir aventurando',fn:dayStart},{label:'Ver bitácora',cls:'ghost',fn:()=>go('log')}]});}
+function gainXP(next){const c=ch();c.xp++;const need=c.level+1;log('XP',`+1 XP (${c.xp}/${need})`);save();
+ if(c.xp<need)return msg('⭐ +1 XP','XP y nivel',`XP: <b>${c.xp}/${need}</b> para el nivel ${need}.`,next);
+ c.xp=0;c.level++;log('Nivel',`¡Nivel ${c.level}!`);save();
+ ask({title:`¡Nivel ${c.level}! PV extra`,table:'Subir de nivel',dice:'1d6',text:`Tira 1d6 + CON (${fmt(c.con)}) y súmalo a tus PV.`,onResult:v=>{const g=Math.max(1,v+c.con);c.hpMax+=g;c.hp+=g;save();
+  show({title:'Subir de nivel',table:'Subir de nivel',roll:v,text:`+${g} PV (máximo ${c.hpMax}). Ahora suma +1 a un atributo (máximo +5).${c.level%2===0?' En niveles pares además eliges una habilidad.':''}`,
+   choices:AK.filter(a=>c[a]<5).map(a=>({label:`${ATTR[a]} ${fmt(c[a])} → ${fmt(c[a]+1)}`,fn:()=>{c[a]++;log('Nivel',`${ATTR[a]} +1`);save();if(c.level%2===0)pickAbility(next);else next();}}))});}});}
+function pickAbility(next){const c=ch();show({title:'Nueva habilidad',table:'Habilidades',text:'Elige una (no se acumulan).',choices:ABIL.filter(([k])=>!c.abilities.includes(k)).map(([k,t])=>({label:t,cls:'ghost',fn:()=>{c.abilities.push(k);log('Habilidad',t);save();next();}}))});}
+
+/* ---------- Tesoro, suministros, magia ---------- */
+function supplyRoll(next){ask({title:'Suministro aleatorio',table:'Suministros (d66)',dice:'d66',hint:'decenas y unidades',onResult:v=>{const n=applySupply(v);log('Suministros (d66)',`${v}: ${n}`);save();msg('Suministro','Suministros (d66)',`<p class="big">${esc(n)}</p>Añadido a tu equipo.`,next,'Continuar',{roll:v});}});}
+function supplyLoop(n,next){if(n<=0)return next();supplyRoll(()=>supplyLoop(n-1,next));}
+function treasure(next){const tt=tbl([['1–10','Suministro aleatorio'],['11–16','2d6 + 10 de oro'],['17–19','Pergamino mágico'],['20','Objeto mágico']]);
+ ask({title:'Tesoro / Botín',table:'Tesoro y Botín (d20)',dice:'1d20',text:tt,onResult:v=>{log('Tesoro y Botín (d20)',`${v}`);
+  if(v<=10)return supplyRoll(next);
+  if(v<=16)return ask({title:'Oro',table:'Tesoro y Botín (d20)',dice:'2d6',text:'2d6 + 10 de oro.',onResult:g=>{ch().gold+=g+10;log('Oro',`+${g+10}`);save();msg('Oro','Tesoro y Botín (d20)',`Ganas <b>${g+10}</b> de oro.`,next,'Continuar',{roll:g});}});
+  if(v<=19)return scrollRoll(next);magicRoll(next);}});}
+function scrollRoll(next){ask({title:'Pergamino mágico',table:'Pergaminos (d12)',dice:'1d12',text:tbl(SCROLLS.map((s,i)=>[i+1,`${s[0]}: ${s[1]}`])),onResult:v=>{const s=SCROLLS[v-1];ch().scrolls.push({n:s[0],e:s[1],learned:false});log('Pergaminos (d12)',s[0]);save();
+ msg(`Pergamino: ${s[0]}`,'Pergaminos (d12)',`${s[1]}.<br>Debes estudiarlo en el campamento antes de usarlo. Se usa una vez y se convierte en ceniza.`,next,'Continuar',{roll:v});}});}
+function magicRoll(next){ask({title:'Objeto mágico',table:'Objetos mágicos (d20)',dice:'1d20',onResult:v=>{const m=MAGIC[v-1];addItem(`✨ ${m[0]}`);log('Objetos mágicos (d20)',m[0]);save();
+ msg(`✨ ${m[0]}`,'Objetos mágicos (d20)',`${m[1]}.<br>Vale 500g.`,next,'Continuar',{roll:v});}});}
+function buyScroll(back){const c=ch();if(c.gold<200)return msg('No te alcanza','Asentamientos',`Un pergamino cuesta 200g y tienes ${c.gold}.`,back,'Volver');c.gold-=200;log('Compra','Pergamino (−200g)');save();scrollRoll(back);}
+
+/* ---------- PNJ, reacciones, rumores ---------- */
+function reaction(back,ctx){ask({title:'Reacción del PNJ',table:'Reacciones (d10)',dice:'1d10',text:(ctx?`<i>${esc(ctx)}</i>`:'')+tbl(nrows(REACT)),onResult:v=>{log('Reacciones (d10)',`${v}: ${REACT[v-1]}`);
+ const a=[];if(v<=3)a.push({label:'⚔️ Combatir',fn:()=>{const d=ctx?detect(ctx):null;combatSetup(d?d.key:null,d?d.count:'1',back);}});
+ if(v===8)a.push({label:'🗞️ Escuchar el rumor (d20)',fn:()=>rumor(back)});
+ if(v===10)a.push({label:'🤝 ¿Se une? (PRE DR12)',fn:()=>companion('acompañante',back)});
+ a.push({label:'Volver',cls:a.length?'ghost':'',fn:back});
+ show({title:'Reacción',table:'Reacciones (d10)',roll:v,text:`<p class="big">${REACT[v-1]}</p>${tbl(nrows(REACT),v)}`,choices:a});}});}
+function rumor(back){ask({title:'Rumor',table:'Rumores (d20)',dice:'1d20',onResult:v=>{log('Rumores (d20)',RUMORS[v-1]);msg('Rumor','Rumores (d20)',`<p class="big">«${RUMORS[v-1]}»</p>`,back,'Volver',{roll:v});}});}
+function npcGen(back){const P={};const step=(i)=>{const T=[['Nombre',NPC_N],['Oficio',NPC_O],['Motivación',NPC_M],['Personalidad',NPC_P]];
+ if(i===4){log('PNJ',`${P.Nombre}, ${P.Oficio} · ${P.Motivación} · ${P.Personalidad}`);return show({title:P.Nombre,table:'Tablas de PNJ',text:tbl(Object.entries(P)),choices:[{label:'🗣️ Reacción (d10)',fn:()=>reaction(back,`${P.Nombre}, ${P.Oficio}`)},{label:'Volver',cls:'ghost',fn:back}]});}
+ ask({title:`PNJ · ${T[i][0]}`,table:`PNJ · ${T[i][0]} (d20)`,dice:'1d20',text:Object.keys(P).length?tbl(Object.entries(P)):'',onResult:v=>{P[T[i][0]]=T[i][1][v-1];step(i+1);}});};step(0);}
+
+/* ---------- Asentamientos y comercio ---------- */
+function settlement(after,forced){const hub=type=>{const c=ch();setCur({k:'fn',fn:()=>hub(type)});
+ const sv=['Posada/Taberna','Sanador'];if(type>=1)sv.push('Mercader');if(type>=2)sv.push('Herrero');if(type>=3)sv.push('Tienda del Mago Loco','Castillo');
+ const pay=(g,f)=>()=>{if(c.gold<g)return msg('No te alcanza','Asentamientos',`Necesitas ${g}g y tienes ${c.gold}.`,()=>hub(type),'Volver');c.gold-=g;f();save();};
+ const a=[{label:'🛏️ Cama en la posada (3g): PV al máximo',fn:pay(3,()=>{c.hp=c.hpMax;log('Posada','Duermes en cama (−3g)');msg('Descansas','Asentamientos',`PV ${c.hp}/${c.hpMax}.`,()=>hub(type));})},
+  {label:'🍺 Cerveza (1g): +1 Juerga',fn:pay(1,()=>{c.merriment=Math.min(3,c.merriment+1);log('Posada','Cerveza (−1g)');hub(type);})},
+  {label:'⚕️ Sanador (precio a tu criterio)',fn:()=>{c.wounded=false;c.poisoned=false;c.bleeding=false;c.hp=c.hpMax;log('Sanador','Curado (salvo miembro amputado u ojo perdido)');msg('Sanador','Asentamientos','Te curan todas las heridas salvo un miembro amputado o un ojo perdido (si es tu caso, vuelve a marcar «Herido» en Características). Descuenta el pago en la Hoja.',()=>hub(type));}},
+  {label:'🗞️ Escuchar rumores (d20)',fn:()=>rumor(()=>hub(type))},{label:'👤 Conocer a alguien (PNJ)',fn:()=>npcGen(()=>hub(type))}];
+ if(type>=1)a.push({label:'🛒 Comprar al mercader',fn:()=>shop(()=>hub(type))});
+ if(type>=2)a.push({label:'⚒️ Herrero: mejorar arma +1 (200g)',fn:pay(200,()=>{c.weapon.plus=1;log('Herrero','Arma +1 (−200g)');msg('Arma mejorada','Asentamientos',`${esc(c.weapon.n)} hace +1 de daño.`,()=>hub(type));})});
+ if(type>=3)a.push({label:'📜 Mago Loco: pergamino (200g)',fn:()=>buyScroll(()=>hub(type))},{label:'🏰 Explorar el castillo (mazmorra)',fn:()=>dungeon(()=>hub(type))});
+ a.push({label:'Salir del asentamiento',cls:'ghost',fn:after});
+ show({title:`🏘️ ${SET_NAMES[type]}`,table:'Asentamientos',text:`Servicios: ${sv.join(', ')}.<br>Oro: <b>${c.gold}</b>`,choices:a});};
+ if(forced!=null)return hub(forced);
+ ask({title:'Tamaño del asentamiento',table:'Asentamientos (d6)',dice:'1d6',text:tbl([['1','Chozas/cabañas: posada, sanador'],['2–3','Aldea: + mercader'],['4–5','Pueblo: + herrero'],['6','Ciudad: + tienda del Mago Loco y castillo']]),
+  onResult:v=>{const type=v===1?0:v<=3?1:v<=5?2:3;log('Asentamientos (d6)',`${v}: ${SET_NAMES[type]}`);hub(type);}});}
+function shop(back){const c=ch();setCur({k:'fn',fn:()=>shop(back)});
+ stage().innerHTML=`<div class="card">${head({title:'🛒 Mercader',table:'Suministros (precios)'})}<p class="txt">Oro: <b>${c.gold}</b></p><select id="si">${Object.entries(SUP).map(([k,[n,p]])=>`<option value="${k}">${esc(n)} — ${p}g</option>`).join('')}</select>
+ <div class="choices"><button class="btn" id="sb">Comprar</button><button class="btn ghost" id="sx">Volver</button></div><div id="err" class="err"></div></div>`;
+ $('#sb').onclick=()=>{const k=+$('#si').value,p=SUP[k][1];if(c.gold<p){$('#err').textContent='No tienes suficiente oro.';return;}c.gold-=p;const n=applySupply(k);log('Mercader',`Compras ${n} (−${p}g)`);save();shop(back);};$('#sx').onclick=back;scrollStage();}
+
+/* ---------- Mazmorras ---------- */
+function dungeon(after){ask({title:'Mazmorra: número de salas',table:'Generación de mazmorras · Salas (2d6)',dice:'2d6',onResult:v=>{G={rooms:v,i:0,after};log('Mazmorra',`${v} salas`);
+ msg('Mazmorra','Generación de mazmorras',`La mazmorra tiene <b>${v}</b> salas. La última sala sale a un hexágono cercano al azar. Dibújala en papel cuadriculado.`,room,'Entrar a la sala 1',{roll:v});}});}
+function room(){G.i++;const t=`Sala ${G.i} de ${G.rooms}`;
+ ask({title:`${t} · Ancho (X)`,table:'Dimensiones de sala',dice:'1d6',hint:'dado primario',onResult:x=>
+ ask({title:`${t} · Largo (Y)`,table:'Dimensiones de sala',dice:'1d6',hint:'dado secundario',text:`X = ${x}`,onResult:y=>{const cor=x===1||y===1;
+ ask({title:`${t} · Salidas`,table:'Salidas por sala (d6)',dice:'1d6',text:`Tamaño ${x}×${y}${cor?' → <b>pasillo</b>':''}.`+tbl([['1','Sin salida'],['2–3','Una salida'],['4–5','Dos salidas'],['6','Tres salidas']]),onResult:e=>{const ex=e===1?0:e<=3?1:e<=5?2:3;log('Mazmorra',`${t}: ${x}×${y}${cor?' pasillo':''}, ${ex} salida(s)`);
+ ask({title:`${t} · ¿Monstruos?`,table:'Monstruos en la sala (d6)',dice:'1d6',text:`${x}×${y}${cor?' (pasillo)':''} · ${ex} salida(s)${ex===0&&G.i<G.rooms?' (busca un pasaje secreto o vuelve atrás)':''}.`+tbl([['1–3','No'],['4–5','Sí'],['6','Sí, pero están ocupados']]),onResult:m=>{
+  if(m<=3){log('Mazmorra','Sala vacía');return roomTreasure();}
+  ask({title:'¿Qué hay en la sala?',table:'Encuentros en mazmorra (d20)',dice:'1d20',onResult:r=>{const txt=DENC[r-1],det=detect(txt);log('Encuentros en mazmorra (d20)',`${r}: ${txt}`);const key=det?det.key:null,cnt=det?det.count:'1';
+   const a=[{label:`⚔️ Combatir${det?` (${BEAST[key].n})`:''}`,fn:()=>combatSetup(key,cnt,roomTreasure)},
+    {label:'🗣️ Razonar o sobornar (PRE DR14)',cls:'ghost',fn:()=>test({title:'Razonar con la criatura',table:'¿Se puede razonar? (PRE DR14)',attr:'pre',dr:14,why:'Las criaturas inteligentes pueden ser persuadidas, sobornadas o engañadas.',onDone:ok=>ok?msg('Te escuchan','¿Se puede razonar?','Negocias el paso.',roomTreasure):show({title:'No los convences',table:'¿Se puede razonar?',text:'Se preparan para atacar.',choices:[{label:'⚔️ Combatir',fn:()=>combatSetup(key,cnt,roomTreasure)}]})})}];
+   if(m===6)a.push({label:'🤫 Pasar a escondidas (DES DR12)',cls:'ghost',fn:()=>test({title:'Pasar sin ser visto',table:'Pruebas',attr:'dex',dr:12,onDone:ok=>ok?msg('Pasas sin ser visto','Pruebas','Sigues adelante.',nextRoom):combatSetup(key,cnt,roomTreasure)})});
+   show({title:'Encuentro en mazmorra',table:'Encuentros en mazmorra (d20)',roll:r,text:`<p class="big">${txt}</p>${m===6?'<p>Están ocupados: aún no te han visto (puedes intentar un ataque sorpresa).</p>':''}`,choices:a});}});}});}});}})});}
+function roomTreasure(){const lim=hasAb('loot')?4:5;ask({title:'¿Tesoro en la sala?',table:'Tesoro y Botín (comprobación d6)',dice:'1d6',text:tbl([[`1–${lim-1}`,'No'],[`${lim}–6`,'Sí']]),onResult:v=>{const y=v>=lim;log('Tesoro (comprobación)',`${v}: ${y?'sí':'no'}`);
+ show({title:y?'¡Hay tesoro!':'Sin tesoro',table:'Tesoro y Botín (comprobación d6)',roll:v,choices:[y?{label:'💰 Tirar tesoro (d20)',fn:()=>treasure(nextRoom)}:{label:'Continuar',fn:nextRoom}]});}});}
+function nextRoom(){if(!G)return;if(G.i>=G.rooms){const a=G.after;G=null;log('Mazmorra','Sales a un hexágono cercano');return msg('Salida','Generación de mazmorras','La última sala sale a un hexágono cercano al azar. Continúas tu viaje desde allí.',a,'Salir de la mazmorra');}
+ ask({title:`Puerta hacia la sala ${G.i+1}`,table:'¿Está cerrada la puerta? (d6)',dice:'1d6',text:tbl([['1–3','Abierta'],['4','Atascada'],['5–6','Cerrada con llave']]),onResult:v=>{log('Puerta',`${v}`);
+  if(v<=3)return msg('La puerta se abre','¿Está cerrada la puerta? (d6)','Adelante.',room,`Entrar a la sala ${G.i+1}`,{roll:v});
+  const res=ok=>ok?msg('¡Abierta!','Pruebas','La puerta cede.',room,`Entrar a la sala ${G.i+1}`):show({title:'No cede',table:'Pruebas',text:'Puedes volver a intentarlo o terminar la exploración.',choices:[{label:'Reintentar',fn:nextRoom},{label:'Salir de la mazmorra',cls:'ghost',fn:()=>{G.i=G.rooms;nextRoom();}}]});
+  const a=[];if(v===4)a.push({label:'💪 Forzar (FUE DR12)',fn:()=>test({title:'Forzar la puerta atascada',table:'Pruebas',attr:'str',dr:12,onDone:res})});
+  else{if(hasItem('Ganzúas'))a.push({label:'🔓 Usar ganzúa (1d6)',fn:()=>ask({title:'Ganzúa',table:'Ganzúas (d6)',dice:'1d6',text:tbl([['1–2','Se rompe'],['3–6','Éxito']]),onResult:x=>{if(x<=2){useItem('Ganzúas');save();}log('Ganzúas',x<=2?'Se rompe':'Éxito');res(x>2);}})});
+   a.push({label:'💪 Romper la cerradura (FUE DR14)',fn:()=>test({title:'Romper la cerradura',table:'Pruebas',attr:'str',dr:14,onDone:res})});}
+  a.push({label:'Salir de la mazmorra',cls:'ghost',fn:()=>{G.i=G.rooms;nextRoom();}});
+  show({title:v===4?'Puerta atascada':'Puerta cerrada con llave',table:'¿Está cerrada la puerta? (d6)',roll:v,choices:a});}});}
+
+/* ================= COMBATE ================= */
+function detect(txt){const low=txt.toLowerCase(),words=low.split(/[^a-záéíóúñü]+/);
+ for(const[k,key]of KW){const hit=k.includes(' ')?low.includes(k):words.some(w=>w.startsWith(k));
+  if(hit){let count='1';const m=/(\d*)d(\d+)/.exec(low);if(m&&!/de oro|raciones/.test(low))count=(m[1]||'1')+'d'+m[2];else{const n=/^(\d+)\s/.exec(low);if(n)count=n[1];}return{key,count};}}return null;}
+function combatSetup(key,count,after){count=count||'1';const isDice=/d/.test(count);setCur({k:'fn',fn:()=>combatSetup(key,count,after)});
+ const opts=Object.entries(BEAST).sort((a,b)=>a[1].n.localeCompare(b[1].n,'es')).map(([k,b])=>`<option value="${k}" ${k===key?'selected':''}>${b.n} (PV ${b.hp}, ${b.d})</option>`).join('');
+ stage().innerHTML=`<div class="card">${head({title:'⚔️ Preparar el combate',table:'Bestiario'})}<div class="grid"><label class="wide">Criatura<select id="cb">${opts}</select></label>
+ <label class="wide">Cantidad ${isDice?`<span class="hint">(tira ${count})</span>`:''}<input id="cn" type="number" min="1" max="20" inputmode="numeric" value="${isDice?'':count}"></label></div>
+ ${isDice?`<button class="btn ghost" id="cr" style="width:100%;margin-top:8px">🎲 Tirar ${count} por mí</button>`:''}<div id="bi" class="txt" style="margin-top:8px"></div>
+ <div class="choices"><button class="btn" id="cs">Comenzar el combate</button><button class="btn ghost" id="cc">Cancelar</button></div><div id="err" class="err"></div></div>`;
+ const info=()=>{const b=BEAST[$('#cb').value];$('#bi').innerHTML=`<b>${b.n}</b>: PV ${b.hp} · Armadura −${b.ar} · Moral ${b.mo??'— (no huye)'} · Ataque ${b.d}${b.sp?`<br><b>${b.sp.t}:</b> ${b.sp.desc}`:''}`;};
+ $('#cb').onchange=info;info();if(isDice)$('#cr').onclick=()=>{$('#cn').value=roll(norm(count));};
+ $('#cc').onclick=after;$('#cs').onclick=()=>{const n=parseInt($('#cn').value,10);if(!(n>=1&&n<=20)){$('#err').textContent='Indica la cantidad (1–20).';return;}startCombat($('#cb').value,n,after);};scrollStage();}
+const alive=()=>K.en.filter(e=>!e.dead&&!e.fled);
+function enemyList(){return `<div>${K.en.map(e=>`<div class="enemy ${e.dead||e.fled?'dead':''}"><span>${esc(K.b.n)} #${e.id}${e.fled?' (huyó)':''}</span><span class="hp"><i style="width:${100*e.hp/e.max}%"></i></span><b>${e.hp}/${e.max}</b></div>`).join('')}</div>`;}
+function startCombat(key,n,after){const b=BEAST[key];K={key,b,en:Array.from({length:n},(_,i)=>({id:i+1,hp:b.hp,max:b.hp,dead:false,fled:false,mc:false})),round:1,after,skip:0,berserk:0,gc:false,ex:false,poison:false};
+ log('Combate',`${n}× ${b.n}`);
+ show({title:`Combate: ${n}× ${b.n}`,table:'Combate',text:`${enemyList()}<p>Armadura enemiga −${b.ar} · Ataque ${b.d} · Moral ${b.mo??'—'}${b.sp?`<br><b>${b.sp.t}:</b> ${b.sp.desc}`:''}</p><p>¿Están desprevenidos? Puedes intentar un <b>ataque sorpresa</b> (DES DR${hasAb('surprise')?8:12}). Si no, tirad iniciativa.</p>`,
+  choices:[{label:'🎲 Iniciativa (1d6 cada uno)',fn:initiative},{label:`🗡️ Ataque sorpresa (DES DR${hasAb('surprise')?8:12})`,cls:'ghost',fn:()=>test({title:'Ataque sorpresa',table:'Combate · Ataque sorpresa',attr:'dex',dr:hasAb('surprise')?8:12,onDone:ok=>msg(ok?'¡Los sorprendes!':'Te ven venir','Combate · Ataque sorpresa',ok?'Atacas primero.':'El enemigo te ve y ataca primero.',ok?playerTurn:enemyTurn)})}]});}
+function initiative(){ask({title:'Iniciativa: tú',table:'Combate · Iniciativa',dice:'1d6',text:'Tú y el enemigo tiráis 1d6. El más alto actúa primero.',onResult:p=>
+ ask({title:'Iniciativa: enemigo',table:'Combate · Iniciativa',dice:'1d6',text:`Tu tirada: <b>${p}</b>. Ahora tira 1d6 por el enemigo.`,onResult:e=>{log('Iniciativa',`Tú ${p} · enemigo ${e}`);
+  if(p===e)return msg('Empate','Combate · Iniciativa',`${p} contra ${e}: volved a tirar.`,initiative,'Repetir');
+  msg('Iniciativa','Combate · Iniciativa',`Tú ${p} · enemigo ${e} → <b>${p>e?'¡actúas primero!':'el enemigo actúa primero.'}</b>`,p>e?playerTurn:enemyTurn);}})});}
+function playerTurn(){const c=ch();if(!alive().length)return victory();
+ if(K.skip>0){K.skip--;return msg(`Ronda ${K.round} · Pierdes el turno`,'Combate','No puedes actuar esta ronda.',enemyTurn,'Turno del enemigo',{cls:'bad'});}
+ const al=alive(),pick=f=>al.length===1?f(al[0]):show({title:'Elige objetivo',table:'Combate',text:enemyList(),choices:al.map(e=>({label:`${K.b.n} #${e.id} (PV ${e.hp})`,fn:()=>f(e)}))});
+ const a=[{label:`⚔️ Cuerpo a cuerpo (FUE DR12 · ${c.weapon.die})`,fn:()=>pick(e=>attack(e,false))}];
+ if(c.weapon.ranged||c.hasBow)a.push({label:'🏹 A distancia (PRE DR12 · d6)',fn:()=>pick(e=>attack(e,true))});
+ if(hasItem('Poción de curación'))a.push({label:'🧪 Beber poción de curación',cls:'ghost',fn:()=>{useItem('Poción de curación');c.hp=c.hpMax;c.bleeding=false;log('Poción','PV al máximo');save();msg('Poción','Curación',`PV ${c.hp}/${c.hpMax}.`,enemyTurn,'Turno del enemigo');}});
+ if(c.scrolls.some(s=>s.learned))a.push({label:'📜 Usar un pergamino',cls:'ghost',fn:useScrollCombat});
+ a.push({label:'✋ Otra acción (hablar, objeto…)',cls:'ghost',fn:otherAction},{label:'🏃 Huir',cls:'ghost',fn:flee});
+ show({title:`Ronda ${K.round} · Tu turno`,table:'Combate',text:`${enemyList()}<p>Tus PV: <b>${c.hp}/${c.hpMax}</b>${c.weaponDamaged?' · <span class="warn">arma dañada (−1)</span>':''}${K.berserk>0?' · <b>Berserker +2 FUE</b>':''}</p>`,choices:a});}
+function useScrollCombat(){const c=ch();show({title:'Usar pergamino',table:'Pergaminos',text:'Se usa sin prueba y se convierte en ceniza.',choices:[...c.scrolls.filter(s=>s.learned).map(s=>({label:`${s.n}: ${s.e}`,cls:'ghost',fn:()=>{if(hasAb('scroll2')&&!s.used){s.used=true;}else c.scrolls=c.scrolls.filter(x=>x!==s);log('Pergamino',`Usas ${s.n}`);save();otherAction(`Usaste <b>${esc(s.n)}</b>: ${esc(s.e)}.`);}})),{label:'Volver',fn:playerTurn}]});}
+function otherAction(note){show({title:'Otra acción',table:'Combate',text:`${note?`<p>${note}</p>`:''}Resuélvela con el Oráculo o una prueba (Herramientas). Si causaste daño, indícalo:${enemyList()}`,
+ choices:[...alive().map(e=>({label:`Hice daño a ${K.b.n} #${e.id}`,cls:'ghost',fn:()=>askNum({title:'Daño causado',table:'Combate',text:`A ${K.b.n} #${e.id} (PV ${e.hp}). Introduce el daño final.`,onResult:d=>applyEnemy(e,Math.max(0,d),-1,endPlayerAttack),cancel:{label:'Volver',fn:otherAction}})})),{label:'Terminar mi turno',fn:enemyTurn}]});}
+function attack(e,ranged,next=endPlayerAttack){const c=ch();
+ test({title:`${ranged?'Ataque a distancia':'Ataque cuerpo a cuerpo'} → ${K.b.n} #${e.id}`,table:ranged?'Combate · Ataque a distancia':'Combate · Ataque cuerpo a cuerpo',attr:ranged?'pre':'str',dr:12,bonus:hasAb('atk')?1:0,onDone:(ok,r)=>{
+  const crit=r===20,fum=r===1;if(fum){c.weaponDamaged=true;save();log('Pifia','Arma dañada (−1 daño hasta repararla)');}
+  if(!ok)return msg('Fallas','Combate',`Tu ataque no conecta.${fum?'<br><span class="warn">💀 Pifia: tu arma hace −1 de daño hasta repararla en el campamento.</span>':''}`,next,'Continuar',{cls:'bad'});
+  const die=ranged&&!c.weapon.ranged?'1d6':norm(c.weapon.die),plus=(c.weapon.plus||0)-(c.weaponDamaged?1:0);
+  ask({title:'¡Impacto! Tira el daño',table:'Combate · Daño',dice:die,text:`${die}${plus?` ${fmt(plus)}`:''}${crit?' ×2 (crítico)':''} − armadura del enemigo (${K.b.ar}).`,onResult:v=>{let d=v+plus;if(crit)d*=2;d=Math.max(0,d-K.b.ar);applyEnemy(e,d,v===range(die)[1]?'max':v,next);}});}});}
+function applyEnemy(e,d,raw,next){e.hp=Math.max(0,e.hp-d);if(e.hp<=0)e.dead=true;log('Combate',`${d} de daño a ${K.b.n} #${e.id} (${e.hp}/${e.max})`);
+ const free=raw==='max'&&hasAb('maxfree')&&alive().some(x=>x!==e);
+ show({title:`Infliges ${d} de daño`,table:'Combate · Daño',cls:'ok',text:`${e.dead?`☠️ ${esc(K.b.n)} #${e.id} cae.`:''}${enemyList()}${free?'<p>¡Daño máximo! Tu habilidad te da un ataque gratis contra otro enemigo.</p>':''}`,
+  choices:[{label:'Continuar',fn:()=>moraleCheck(free?()=>{const o=alive().find(x=>x!==e);o?attack(o,false,next):next();}:next)}]});}
+function endPlayerAttack(){if(hasAb('extra')&&!K.ex&&alive().length){K.ex=true;return show({title:'Ataque extra',table:'Habilidades',text:'Tu habilidad te permite otro ataque esta ronda.',choices:[{label:'Atacar de nuevo',fn:playerTurn},{label:'Pasar',cls:'ghost',fn:enemyTurn}]});}enemyTurn();}
+function moraleCheck(next){if(!K||K.b.mo==null||!alive().length)return next();const n=K.en.length,dead=K.en.filter(e=>e.dead).length;let who=null,why='';
+ if(n>1&&!K.gc&&dead>=n/2){K.gc=true;who=alive();why='La mitad del grupo ha caído';}
+ else{const e=alive().find(e=>!e.mc&&e.hp<=e.max/3);if(e){e.mc=true;who=[e];why=`${K.b.n} #${e.id} tiene 1/3 o menos de sus PV`;}}
+ if(!who)return next();
+ ask({title:'Moral del enemigo',table:'Combate · Moral',dice:'2d6',text:`${why}. Tira 2d6: si el resultado es <b>mayor que ${K.b.mo}</b>, huye${who.length>1?'n':''}.`,onResult:v=>{const fl=v>K.b.mo;if(fl)who.forEach(e=>e.fled=true);log('Moral',`${v} vs ${K.b.mo} → ${fl?'huyen':'siguen'}`);
+  msg('Moral','Combate · Moral',fl?`¡${who.length>1?'Huyen':'Huye'}!`:'Siguen luchando.',()=>moraleCheck(next),'Continuar',{roll:v});}});}
+function enemyTurn(){if(!K)return;K.ex=false;if(!alive().length)return victory();K.queue=alive().map(e=>e.id);K.special=!!(K.b.sp&&!K.b.sp.passive&&K.round%3===0);nextEnemy();}
+function nextEnemy(){if(!K)return;const id=K.queue.shift();
+ if(id==null){K.round++;if(K.berserk>0)K.berserk--;return playerTurn();}
+ const e=K.en.find(x=>x.id===id);if(!e||e.dead||e.fled)return nextEnemy();
+ const sp=K.special?K.b.sp:null;
+ if(sp&&sp.test)return test({title:`${K.b.n} #${e.id}: ¡${sp.t}!`,table:`Bestiario · ${K.b.n}`,attr:sp.test,dr:sp.dr,why:sp.desc,onDone:ok=>{if(!ok)K.skip=Math.max(K.skip,sp.skip);msg(ok?'Resistes':'¡Sucumbes!',`Bestiario · ${K.b.n}`,ok?'Resistes el efecto.':sp.fail,nextEnemy,'Continuar',{cls:ok?'ok':'bad'});}});
+ defend(e,sp);}
+function defend(e,sp){const c=ch(),die=sp&&sp.dice?sp.dice:norm(K.b.d),red=c.armorRed+(hasAb('armor')?1:0);
+ test({title:`Defensa: ${K.b.n} #${e.id} ataca${sp?` · ¡${sp.t}!`:''}`,table:'Combate · Defensa',attr:'dex',dr:12,why:sp?`<b>${sp.t}:</b> ${sp.desc}`:`Esquiva el ataque (${die}).`,onDone:(ok,r)=>{
+  if(ok){if(r===20)return show({title:'¡Esquiva crítica!',table:'Combate · Crítico',cls:'ok',text:'Esquivas y ganas un <b>ataque gratis</b>.',choices:[{label:'⚔️ Ataque gratis',fn:()=>attack(e,false,nextEnemy)}]});
+   return msg('Esquivas','Combate · Defensa','El golpe no te alcanza.',nextEnemy,'Continuar',{cls:'ok'});}
+  const dbl=r===1;
+  ask({title:'Te golpean: daño del enemigo',table:'Combate · Defensa',dice:die,text:`${die}${dbl?' ×2 (pifia)':''} − tu armadura (${red}).`,onResult:v=>{const d=Math.max(0,v*(dbl?2:1)-red);let extra='';
+   if(K.key==='cultist'&&d>0)K.poison=true;if(sp&&sp.drain&&d>0){e.hp=Math.min(e.max,e.hp+d);extra=`El Vampiro recupera ${d} PV.`;}
+   hurt(d,`${K.b.n} #${e.id}`,nextEnemy,extra);}});}});}
+function flee(){ask({title:'Huir',table:'Combate · Huir (d6)',dice:'1d6',text:'Usas tu acción para desengancharte y alejarte.'+tbl([['1','El enemigo te alcanza'],['2–4','Te deja escapar'],['5–6','Te persigue y queda Próximo: vuelve a tirar']]),onResult:v=>{log('Huir',`${v}`);
+ if(v===1)return msg('¡Te alcanza!','Combate · Huir (d6)','No logras escapar.',enemyTurn,'Turno del enemigo',{roll:v,cls:'bad'});
+ if(v<=4){const a=K.after;K=null;return msg('Escapas','Combate · Huir (d6)','Te pierdes de vista.',a,'Continuar',{roll:v,cls:'ok'});}
+ msg('Te persigue','Combate · Huir (d6)','Sigue Próximo. Vuelve a tirar.',flee,'Tirar de nuevo',{roll:v});}});}
+function victory(){const k=K,c=ch(),killed=k.en.filter(e=>e.dead).length,fled=k.en.filter(e=>e.fled).length;log('Combate',`Fin: ${killed} derrotados, ${fled} huyeron`);
+ const fin=()=>{K=null;const heal=()=>{if(c.hp<c.hpMax&&c.rations>0)return show({title:'Recuperarte',table:'Curación',text:`PV ${c.hp}/${c.hpMax}. Puedes comer una ración y beber agua para recuperar 1d6 PV.`,choices:[{label:'Comer 1 ración (+1d6 PV)',fn:()=>ask({title:'Curación',table:'Curación',dice:'1d6',onResult:v=>{c.rations--;c.hungry=false;c.hp=Math.min(c.hpMax,c.hp+v);log('Curación',`+${v} PV`);save();msg('Curación','Curación',`PV ${c.hp}/${c.hpMax}.`,k.after,'Continuar',{roll:v});}})},{label:'Seguir sin comer',cls:'ghost',fn:k.after}]});k.after();};
+  if(k.poison)return ask({title:'¿Envenenado?',table:'Cultista · Daga envenenada',dice:'1d6',text:tbl([['1–2','Envenenado: −1 a todo hasta superar CON DR14'],['3–6','Te libras']]),onResult:v=>{if(v<=2)c.poisoned=true;save();msg(v<=2?'Envenenado':'Te libras','Cultista · Daga envenenada',v<=2?'−1 a todos los atributos hasta superar CON DR14.':'El veneno no hace efecto.',heal,'Continuar',{roll:v});}});heal();};
+ const lim=hasAb('loot')?4:5;
+ show({title:'🏆 Combate terminado',table:'Combate',cls:'ok',text:`${killed} derrotado(s)${fled?`, ${fled} huyeron`:''}.${killed?' Los enemigos caídos pueden llevar botín.':''}`,
+  choices:[...(killed?[{label:`💰 ¿Hay botín? (1d6: ${lim}–6)`,fn:()=>ask({title:'¿Hay botín?',table:'Tesoro y Botín (comprobación d6)',dice:'1d6',onResult:v=>v>=lim?treasure(fin):msg('Sin botín','Tesoro y Botín (comprobación d6)','No llevaban nada de valor.',fin,'Continuar',{roll:v})})}]:[]),{label:'Continuar',cls:killed?'ghost':'',fn:fin}]});}
+
+/* ================= HERRAMIENTAS ================= */
+function tool(f){const back=CURS.turn;const done=()=>back?replay(back):resumeTurn();f(done);}
+const TOOLS={
+ oracle:done=>{const q=()=>ask({title:'Oráculo',table:'Oráculo (d6)',dice:'1d6',text:'Formula una pregunta de sí o no y tira.'+tbl(nrows(ORACLE)),onResult:v=>{log('Oráculo',ORACLE[v-1]);show({title:'Oráculo',table:'Oráculo (d6)',roll:v,text:`<p class="big">${ORACLE[v-1]}</p>`,choices:[{label:'Otra pregunta',fn:q},{label:'↩ Volver al turno',cls:'ghost',fn:done}]});}});q();},
+ test:done=>show({title:'Prueba de atributo',table:'Pruebas',text:'¿Qué atributo?',choices:[...AK.map(a=>({label:`${ATTR[a]} (${fmt(totalMod(a).m)})`,fn:()=>show({title:`Prueba de ${ATTR[a]}`,table:'Pruebas · Dificultad',text:tbl([[6,'Muy fácil'],[8,'Fácil'],[10,'Más o menos fácil'],[12,'Normal'],[14,'Difícil'],[16,'Improbable'],[18,'Casi imposible']]),choices:[6,8,10,12,14,16,18].map(dr=>({label:`DR${dr}`,cls:dr===12?'':'ghost',fn:()=>test({title:`Prueba de ${ATTR[a]}`,attr:a,dr,onDone:()=>done()})}))})})),{label:'↩ Volver',cls:'ghost',fn:done}]}),
+ react:done=>reaction(done),npc:done=>npcGen(done),rumor:done=>rumor(done),
+ combat:done=>combatSetup(null,'1',done),dungeon:done=>dungeon(done),treasure:done=>treasure(done),
+ settle:done=>settlement(done),scroll:done=>scrollRoll(done)};
+const toolsHTML=()=>`<details class="toolbox"><summary>🧰 Herramientas (se puede usar en cualquier momento)</summary><div class="tools">
+ <button data-t="oracle">🔮 Oráculo</button><button data-t="test">🎯 Prueba</button><button data-t="react">🗣️ Reacción PNJ</button><button data-t="npc">👤 Generar PNJ</button>
+ <button data-t="rumor">🗞️ Rumor</button><button data-t="combat">⚔️ Combate</button><button data-t="dungeon">🗝️ Mazmorra</button><button data-t="treasure">💰 Tesoro</button>
+ <button data-t="settle">🏘️ Asentamiento</button><button data-t="edit">✏️ Características</button></div></details>`;
+function bindTools(){document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(b.dataset.t==='edit')return turnForm();tool(TOOLS[b.dataset.t]);});}
+
+/* ================= VISTAS ================= */
+function renderStatus(){const el=$('#status'),rc=$('#recent'),c=S.char;
+ if(el){if(!c||!c.created)el.innerHTML='';else{const pill=(i,k,v)=>`<span class="pill">${i}<button data-k="${k}" data-d="-1" aria-label="menos">−</button><b>${v}</b><button data-k="${k}" data-d="1" aria-label="más">+</button></span>`;
+  const flags=[c.hungry&&'Hambre −1',c.poisoned&&'Envenenado −1',c.wounded&&'Herido −1',c.bleeding&&'Sangrando',c.weaponDamaged&&'Arma dañada',...Object.entries(c.dayMods||{}).map(([k,v])=>`${ATTR[k]} ${fmt(v)} hoy`)].filter(Boolean);
+  el.innerHTML=`<div class="sname">${esc(c.name||'Enano')} · Nv ${c.level} · Día ${c.day} · ${c.season||'—'} · ${c.terrain!=null?TERR[c.terrain]:'—'}</div>
+  <div class="pills">${pill('❤️','hp',`${c.hp}/${c.hpMax}`)}${pill('🍖','rations',c.rations)}${pill('🍄','mushrooms',c.mushrooms)}${pill('🍺','merriment',c.merriment)}${pill('🪙','gold',c.gold)}</div>
+  ${flags.length||(c.hungry&&c.rations)?`<div class="flags">${flags.map(f=>`<span class="flag">${f}</span>`).join('')}${c.hungry&&c.rations?'<button class="flag eat" data-act="eat">🍖 Comer ración</button>':''}</div>`:''}
+  <div class="mods">FUE ${fmt(c.str)} · DES ${fmt(c.dex-c.dexPen)} · CON ${fmt(c.con)} · PRE ${fmt(c.pre)} · Armadura −${c.armorRed} · ${esc(c.weapon.n)} ${c.weapon.die}${c.weapon.plus?'+'+c.weapon.plus:''}</div>`;}}
+ if(rc)rc.innerHTML=S.log.slice(-6).reverse().map(l=>`<li><small>Día ${l.d} · ${esc(l.t)}</small><br>${esc(l.x)}</li>`).join('')||'<li>Aún no hay tiradas.</li>';}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-k]');const c=S.char;
+ if(b&&c){const k=b.dataset.k,d=+b.dataset.d,max={hp:c.hpMax,mushrooms:maxMush(),merriment:3}[k]??99999;c[k]=clamp(c[k]+d,0,max);if(k==='rations'&&d<0&&c.rations>=0)c.hungry=false;save();return;}
+ const a=e.target.closest('[data-act="eat"]');if(a&&c&&c.rations>0){c.rations--;c.hungry=false;log('Ración','Comes una ración');}
+ const g=e.target.closest('[data-go]');if(g)go(g.dataset.go);});
+function homeView(m){const c=S.char;
+ m.innerHTML=`<div class="card"><h3>Bienvenido, viajero</h3><p>Esta guía acompaña tus partidas de <b>DWARF</b>, el juego de rol solitario sobre el largo viaje de regreso a casa.</p>
+ <p>Tú tiras tus dados reales e introduces el resultado. La guía te dice <b>qué tirar en cada fase</b>, <b>consulta la tabla</b> correspondiente (siempre verás cuál), aplica tus modificadores y te lleva al siguiente paso.</p>
+ <div class="choices"><button class="btn" data-go="create">⚒️ 1 · Crear personaje</button><button class="btn" data-go="turn">🗺️ 2 · Guía de turnos</button></div></div>
+ <div class="card"><h3>Cómo funciona</h3><ul><li><b>Personaje:</b> trasfondo, nombre, atributos (3d6 repitiendo 1 y 2), PV, oro, armadura, arma y suministros.</li>
+ <li><b>Turnos:</b> al empezar te pide las características del personaje. Luego: clima → ración → por cada hexágono terreno, punto de interés y encuentro → recolección → campamento.</li>
+ <li><b>Pruebas:</b> 1d20 + modificador contra la DR. La guía suma armadura, hambre, veneno y heridas, y te deja gastar Juerga u Hongos.</li>
+ <li><b>Combate:</b> iniciativa, ataque, defensa, críticos, pifias, moral, huida, heridas y botín, paso a paso.</li>
+ <li>Tu partida se guarda en este navegador. Usa «Exportar» para copiarla a otro dispositivo.</li></ul></div>
+ <div class="card"><h3>Partida guardada</h3><p>${c&&c.created?`<b>${esc(c.name)}</b> · nivel ${c.level} · día ${c.day} · ${c.hexes||0} hexágonos`:'No hay ningún personaje todavía.'}</p>
+ <div class="choices"><button class="btn ghost" id="exp">⬇️ Exportar partida (.json)</button><label class="btn ghost">⬆️ Importar partida<input type="file" id="imp" accept=".json,application/json" hidden></label><button class="btn ghost" id="rst">🗑️ Borrar todo</button></div></div>`;
+ $('#exp').onclick=()=>download('dwarf-partida.json',JSON.stringify(S,null,1),'application/json');
+ $('#imp').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const s=JSON.parse(t);if(!s||!('log'in s))throw 0;S=Object.assign({char:null,turn:null,log:[],view:'home'},s);CURS={create:null,turn:null};save();alert('Partida importada.');render();}catch(_){alert('El archivo no es una partida válida.');}});};
+ $('#rst').onclick=()=>{if(confirm('¿Borrar personaje, turno y bitácora?')){S={char:null,turn:null,log:[],view:'home'};CURS={create:null,turn:null};save();render();}};}
+function sheetView(m){const c=S.char;if(!c||!c.created){m.innerHTML='<div class="card"><h3>Sin personaje</h3><p>Crea uno primero.</p><div class="choices"><button class="btn" data-go="create">⚒️ Crear personaje</button></div></div>';return;}
+ m.innerHTML=`<div id="status" class="status"></div><div class="card"><h3>${esc(c.name)}</h3>${sheetSummary(c)}
+ <p>Nivel <b>${c.level}</b> · XP <b>${c.xp}/${c.level+1}</b></p>${c.abilities.length?`<p><b>Habilidades:</b> ${c.abilities.map(k=>ABIL.find(a=>a[0]===k)[1]).join('; ')}</p>`:''}
+ <div class="choices"><button class="btn ghost" id="edit">✏️ Editar características</button></div></div>
+ <div class="card"><h3>Equipo</h3><p class="hint">12 espacios normales · 5 para objetos pequeños apilables.</p><div id="items">${c.items.map((it,i)=>`<div class="itemrow"><span>${esc(it.n)}${it.q>1?` ×${it.q}`:''}</span><button data-rm="${i}" aria-label="Quitar">✕</button></div>`).join('')||'<p>Vacío.</p>'}</div>
+ <div class="row" style="margin-top:8px"><input id="ni" placeholder="Añadir objeto"><button class="btn" id="ai">Añadir</button></div></div>
+ <div class="card"><h3>Pergaminos</h3>${c.scrolls.map((s,i)=>`<div class="itemrow"><span><b>${esc(s.n)}</b> — ${esc(s.e)} ${s.learned?'✅ aprendido':'(por estudiar)'}</span><button data-rs="${i}" aria-label="Quitar">✕</button></div>`).join('')||'<p>Ninguno.</p>'}</div>
+ <div class="card"><h3>Notas</h3><textarea id="notes" rows="6" placeholder="Mapa, PNJ, rumores…">${esc(c.notes)}</textarea></div>`;
+ renderStatus();
+ m.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const it=c.items[+b.dataset.rm];if(it.q>1)it.q--;else c.items.splice(+b.dataset.rm,1);save();sheetView(m);});
+ m.querySelectorAll('[data-rs]').forEach(b=>b.onclick=()=>{c.scrolls.splice(+b.dataset.rs,1);save();sheetView(m);});
+ $('#ai').onclick=()=>{const v=$('#ni').value.trim();if(v){addItem(v);save();sheetView(m);}};
+ $('#notes').oninput=e=>{c.notes=e.target.value;save();};
+ $('#edit').onclick=()=>{S.view='turn';save();render();turnForm();};}
+function logView(m){m.innerHTML=`<div class="card"><h3>Bitácora</h3><p class="hint">Todas las tiradas y la tabla consultada en cada una.</p><div class="choices"><button class="btn ghost" id="dl">⬇️ Descargar (.txt)</button><button class="btn ghost" id="cl">Borrar bitácora</button></div>
+ <ul class="log" style="margin-top:10px">${S.log.slice().reverse().map(l=>`<li><small>Día ${l.d} · ${esc(l.t)}</small><br>${esc(l.x)}</li>`).join('')||'<li>Vacía.</li>'}</ul></div>`;
+ $('#dl').onclick=()=>download('dwarf-bitacora.txt',S.log.map(l=>`Día ${l.d} | ${l.t} | ${l.x}`).join('\n'),'text/plain');
+ $('#cl').onclick=()=>{if(confirm('¿Borrar la bitácora?')){S.log=[];save();logView(m);}};}
+function download(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();}
+function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));const m=$('#app');
+ if(S.view==='create'){m.innerHTML='<div id="status" class="status"></div><div id="stage"></div>';renderStatus();if(CURS.create)return replay(CURS.create);if(S.char&&S.char.created)return createdSummary();return createIntro();}
+ if(S.view==='turn'){m.innerHTML=`<div id="status" class="status"></div><div id="stage"></div>${toolsHTML()}<div class="card dark"><h4>Últimas tiradas</h4><ul class="log" id="recent"></ul></div>`;bindTools();renderStatus();
+  if(!S.char||!S.char.created||!S.turn)return turnForm();if(CURS.turn)return replay(CURS.turn);return resumeTurn();}
+ if(S.view==='sheet')return sheetView(m);if(S.view==='log')return logView(m);return homeView(m);}
+function go(v){S.view=v;save();render();try{window.scrollTo(0,0);}catch(e){}}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='create')CURS.create=CURS.create;go(b.dataset.v);});
+render();
+</script>
+</body>
+</html>
