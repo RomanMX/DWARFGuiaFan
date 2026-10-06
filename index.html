@@ -84,8 +84,12 @@ ol.proc{margin:6px 0;padding-left:22px}
 footer{text-align:center;color:var(--mut);font-size:13px;padding:10px 16px 30px}
 :root{--bg:#101614;--bg2:rgba(13,20,19,.72);--card:rgba(18,27,25,.72);--card2:rgba(255,255,255,.12);--ink:#f4efe4;--ink2:#ded6c8;--acc:#e7ad68;--acc2:#bd8248;--line:rgba(255,255,255,.23);--ok:#8dcc91;--bad:#ff9c8a;--txt:#f4efe4;--mut:#d0c9bb;--hi:rgba(231,173,104,.22)}
 body{position:relative;isolation:isolate;background:#101614}
-body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("FONDO_BOSQUE.jpeg") center/cover no-repeat;transition:background-image .3s ease}
-body[data-view="create"]::before{background-image:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("FONDO_HERRERIA.jpeg")}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("imagenes/FONDO_BOSQUE.jpeg") center/cover no-repeat;transition:background-image .3s ease}
+body[data-view="create"]::before{background-image:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("imagenes/FONDO_HERRERIA.jpeg")}
+body[data-view="turn"][data-season="Primavera"]::before{background-image:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("imagenes/FONDO_PRIMAVERA.jpg")}
+body[data-view="turn"][data-season="Verano"]::before{background-image:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("imagenes/FONDO_VERANO.jpg")}
+body[data-view="turn"][data-season="Otoño"]::before{background-image:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("imagenes/FONDO_OTONO.jpg")}
+body[data-view="turn"][data-season="Invierno"]::before{background-image:linear-gradient(180deg,rgba(8,14,13,.48),rgba(8,14,13,.72)),url("imagenes/FONDO_INVIERNO.jpg")}
 header{padding-top:24px}
 h1{color:#fff6e6;text-shadow:0 3px 18px rgba(0,0,0,.8),0 1px 2px #000}
 .sub{color:#f1e8d7;text-shadow:0 1px 8px #000}
@@ -828,7 +832,7 @@ function logView(m){m.innerHTML=`<div class="card"><h3>Bitácora</h3><p class="h
  $('#dl').onclick=()=>download('dwarf-bitacora.txt',S.log.map(l=>`Día ${l.d} | ${l.t} | ${l.x}`).join('\n'),'text/plain');
  $('#cl').onclick=()=>{if(confirm('¿Borrar la bitácora?')){S.log=[];save();logView(m);}};}
 function download(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();}
-function render(){document.body.dataset.view=S.view;document.querySelectorAll('nav button').forEach(b=>{const active=b.dataset.v===S.view;b.classList.toggle('on',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});const m=$('#app');
+function render(){document.body.dataset.view=S.view;document.body.dataset.season=ch()?.season||'';document.querySelectorAll('nav button').forEach(b=>{const active=b.dataset.v===S.view;b.classList.toggle('on',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});const m=$('#app');
  if(S.view==='create'){m.innerHTML='<div id="status" class="status"></div><div id="stage"></div>';renderStatus();if(CURS.create)return replay(CURS.create);if(S.char&&S.char.created)return createdSummary();return createIntro();}
  if(S.view==='turn'){m.innerHTML=`<div id="status" class="status"></div><div id="stage"></div>${toolsHTML()}<div class="card dark"><h4>Últimas tiradas</h4><ul class="log" id="recent"></ul></div>`;bindTools();renderStatus();
   if(!S.char||!S.char.created||!S.turn)return turnForm();if(CURS.turn)return replay(CURS.turn);return resumeTurn();}

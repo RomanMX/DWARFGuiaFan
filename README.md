@@ -11,7 +11,7 @@ Puedes tirar tus dados reales o pulsar «Tirar por mí». La partida se guarda e
 
 ## Notas
 
-- Es un único archivo HTML sin dependencias (solo Google Fonts).
+- La guía está en un único archivo HTML; las imágenes de fondo están en `imagenes/` y Google Fonts es la única dependencia externa.
 - Tabla de Tesoro: el manual lista 11–17 y 17–19; aquí se usa 11–16 / 17–19.
 - Guía de ayuda no oficial. DWARF © Tavern Lore, publicado bajo la Licencia de Terceros de MÖRK BORG. Necesitas el manual del juego.
 
