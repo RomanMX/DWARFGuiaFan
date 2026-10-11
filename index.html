@@ -42,6 +42,7 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
 .btn.small{font-size:15px;padding:8px 10px}
 #auto{width:100%;margin-top:8px}
 .choices{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.choice-help{display:block;font-size:14px;font-weight:400;line-height:1.3;margin-top:3px}
 table.t{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0}
 table.t td{border-bottom:1px solid var(--line);padding:4px 6px;vertical-align:top}
 table.t td:first-child{width:3.6em;font-weight:700;color:var(--acc);white-space:nowrap}
@@ -307,7 +308,7 @@ function ask(o){setCur({k:'ask',o});const[mn0,mx0]=range(o.dice);const mn=o.min?
  scrollStage();}
 function show(o){setCur({k:'show',o});
  stage().innerHTML=`<div class="card ${o.cls||''}">${head(o)}${o.roll!=null?`<div class="res">Resultado: <b>${o.roll}</b></div>`:''}${o.text?`<div class="txt">${o.text}</div>`:''}
- <div class="choices">${(o.choices||[]).map((c,i)=>`<button class="btn ${c.cls||''}" data-i="${i}">${esc(c.label)}</button>`).join('')}</div></div>`;
+ <div class="choices">${(o.choices||[]).map((c,i)=>`<button class="btn ${c.cls||''}" data-i="${i}">${esc(c.label)}${c.help?`<small class="choice-help">${esc(c.help)}</small>`:''}</button>`).join('')}</div></div>`;
  stage().querySelectorAll('.choices button').forEach(b=>b.onclick=()=>o.choices[+b.dataset.i].fn());
  scrollStage();}
 const msg=(title,table,text,fn,label='Continuar',extra={})=>show(Object.assign({title,table,text,choices:[{label,fn}]},extra));
@@ -472,7 +473,7 @@ function dWeather(){const c=ch();S.turn.phase='weather';save();
 function dRation(){const c=ch();S.turn.phase='ration';save();
  const after=()=>S.turn.w.speed==='X'?dCave():dPlan();
  if(c.rations>0)return show({title:'2 · Consumir ración',table:'Raciones',text:`Tienes <b>${c.rations}</b> raciones. Una ración te sostiene un día. Si no comes, −1 a todas las pruebas hasta que comas.`,
-  choices:[{label:'Comer 1 ración',fn:()=>{c.rations--;c.hungry=false;log('Ración',`Comes 1 ración (quedan ${c.rations})`);after();}},{label:'No comer hoy',cls:'ghost',fn:()=>{c.hungry=true;log('Ración','No comes: −1 a las pruebas');after();}}]});
+  choices:[{label:'Comer 1 ración',help:'Te alimenta por hoy y evita la penalización por hambre.',fn:()=>{c.rations--;c.hungry=false;log('Ración',`Comes 1 ración (quedan ${c.rations})`);after();}},{label:'No comer hoy',cls:'ghost',help:'Conservas la ración, pero tienes −1 a todas las pruebas hasta que comas.',fn:()=>{c.hungry=true;log('Ración','No comes: −1 a las pruebas');after();}}]});
  c.hungry=true;log('Ración','Sin raciones: −1 a las pruebas');msg('2 · Sin raciones','Raciones','<p class="warn">No tienes raciones: −1 a todas las pruebas hasta que comas.</p>Intenta forrajear, cazar o pescar hoy.',after);}
 function dCave(){S.turn.phase='cave';save();
  show({title:'¡Busca una cueva YA!',table:'Encontrar una cueva',text:'El clima es severo y no puedes viajar. Si ya estás en un refugio sólido (asentamiento o edificio) no necesitas cueva.',
@@ -486,7 +487,7 @@ function caveEnc(after){ask({title:'Encuentros en cueva',table:'Encuentros en cu
  show({title:'Encuentro en cueva',table:'Encuentros en cueva (d6)',roll:v,text:`<p class="big">${CAVE[v-1]}</p>`,choices:acts});}});}
 function dPlan(){const t=S.turn;t.phase='plan';save();const w=t.w,half=w.speed==='½'||t.half,n=half?1:2,canF=w.forage!=='X';
  show({title:'3 · Plan del día',table:'Viaje',text:`Puedes avanzar <b>${n}</b> hexágono${n>1?'s':''} hoy${half?' (velocidad ½)':''}. Si forrajeas solo avanzas 1.${canF?'':'<br><span class="warn">El clima no permite forrajear.</span>'}<br>Con arco o caña puedes cazar o pescar además de forrajear.<br>Se tiran terreno, punto de interés y encuentro <b>por cada hexágono</b>.`,
-  choices:[{label:`Viajar ${n} hexágono${n>1?'s':''}`,fn:()=>startHexes(n,false)},...(canF?[{label:'Forrajear y viajar 1 hexágono',cls:'ghost',fn:()=>startHexes(1,true)}]:[]),{label:'No viajar hoy',cls:'ghost',fn:()=>{t.hexTotal=0;t.hexIdx=0;t.forage=canF;save();afterHexes();}}]});}
+  choices:[{label:`Viajar ${n} hexágono${n>1?'s':''}`,help:'Avanzas hacia tu destino y exploras cada hexágono, pero no buscas comida.',fn:()=>startHexes(n,false)},...(canF?[{label:'Forrajear y viajar 1 hexágono',cls:'ghost',help:'Buscas comida para aumentar tus raciones y avanzas solo 1 hexágono.',fn:()=>startHexes(1,true)}]:[]),{label:'No viajar hoy',cls:'ghost',help:'Te quedas en este hexágono; puedes buscar comida y luego acampar.',fn:()=>{t.hexTotal=0;t.hexIdx=0;t.forage=canF;save();afterHexes();}}]});}
 function startHexes(n,f){const t=S.turn;t.hexTotal=n;t.hexIdx=0;t.forage=f;save();dHex();}
 function dHex(){const t=S.turn,c=ch();t.phase='hex';save();const k=t.hexIdx+1,title=`Hexágono ${k} de ${t.hexTotal} · Terreno`;
  const done=(r,txt,table)=>show({title:'Terreno',table,roll:r,text:txt,choices:[{label:'Buscar punto de interés',fn:dPOI}]});
@@ -532,10 +533,10 @@ function afterHexes(){if(S.turn.forage)forageMenu();else dCamp(false);}
 
 /* ---------- Forrajeo, caza y pesca ---------- */
 function forageMenu(){const t=S.turn,c=ch(),w=t.w;t.phase='forage';save();const acts=[];
- if(!t.foraged&&w.forage!=='X')acts.push({label:'🌿 Forrajear (1d6)',fn:forage});
- if(c.hasBow&&w.forage!=='X'&&!t.hunted)acts.push({label:'🏹 Cazar',fn:hunt});
- if(c.hasRod&&!t.fished)acts.push({label:'🎣 Pescar',fn:()=>{t.fished=true;save();fish();}});
- acts.push({label:'⛺ Ir al campamento',cls:'ghost',fn:()=>dCamp(false)});
+ if(!t.foraged&&w.forage!=='X')acts.push({label:'🌿 Forrajear (1d6)',help:'Busca comida en el terreno; el resultado puede añadir raciones o un hongo.',fn:forage});
+ if(c.hasBow&&w.forage!=='X'&&!t.hunted)acts.push({label:'🏹 Cazar',help:'Con tu arco puedes rastrear presas y conseguir raciones.',fn:hunt});
+ if(c.hasRod&&!t.fished)acts.push({label:'🎣 Pescar',help:'Con tu caña puedes intentar conseguir comida; necesitas agua cerca.',fn:()=>{t.fished=true;save();fish();}});
+ acts.push({label:'⛺ Ir al campamento',cls:'ghost',help:'Termina las actividades de recolección y pasa a preparar la noche.',fn:()=>dCamp(false)});
  show({title:'Recolección',table:'Forrajeo / Caza / Pesca',text:`Clima: <b>${w.n}</b> · modificador al forrajeo: ${w.forage==='X'?'no se puede':fmt(w.forage)}${hasAb('forage')?' (+2 por habilidad)':''}.<br>Raciones: <b>${c.rations}</b>${c.hasRod?'<br>Para pescar necesitas agua cerca (río, lago, estanque, costa).':''}${!c.hasBow&&!c.hasRod?'<br><small>Sin arco ni caña no puedes cazar ni pescar.</small>':''}`,choices:acts});}
 function forage(){const t=S.turn,c=ch(),mod=(t.w.forage||0)+(hasAb('forage')?2:0);t.foraged=true;save();
  ask({title:'Forrajear',table:'Forrajeo (d6)',dice:'1d6',text:`Modificador del clima${hasAb('forage')?' y habilidad':''}: <b>${fmt(mod)}</b> (se aplica después de tirar).`+tbl(FORAGE.map((f,i)=>[i+1,`${f[0]}${f[1]?` · ${f[1]} ración(es)`:''}`])),onResult:v=>{
