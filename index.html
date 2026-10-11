@@ -799,6 +799,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-k]');const
  if(b&&c){const k=b.dataset.k,d=+b.dataset.d,max={hp:c.hpMax,mushrooms:maxMush(),merriment:3}[k]??99999;c[k]=clamp(c[k]+d,0,max);if(k==='rations'&&d<0&&c.rations>=0)c.hungry=false;save();return;}
  const a=e.target.closest('[data-act="eat"]');if(a&&c&&c.rations>0){c.rations--;c.hungry=false;log('Ración','Comes una ración');}
  const g=e.target.closest('[data-go]');if(g)go(g.dataset.go);});
+function restartAdventure(){const c=S.char;if(!c||!c.created||c.dead)return;
+ if(!confirm(`¿Reiniciar la aventura de ${c.name||'tu enano'}? Se conservarán el personaje, nivel, equipo y recursos. Se reiniciarán el día, estación, terreno, hexágonos y bitácora.`))return;
+ c.day=1;c.hexes=0;c.season=null;c.terrain=null;c.dayMods={};c.nextMods={};c.nextHalf=false;
+ S.turn={phase:'dayStart'};S.log=[];S.view='turn';CURS={create:null,turn:null};K=null;G=null;save();render();}
 function homeView(m){const c=S.char;
  m.innerHTML=`<div class="card"><h3>Bienvenido, viajero</h3><p>Esta guía acompaña tus partidas de <b>DWARF</b>, el juego de rol solitario sobre el largo viaje de regreso a casa.</p>
  <p>Tú tiras tus dados reales e introduces el resultado. La guía te dice <b>qué tirar en cada fase</b>, <b>consulta la tabla</b> correspondiente (siempre verás cuál), aplica tus modificadores y te lleva al siguiente paso.</p>
@@ -809,7 +813,8 @@ function homeView(m){const c=S.char;
  <li><b>Combate:</b> iniciativa, ataque, defensa, críticos, pifias, moral, huida, heridas y botín, paso a paso.</li>
  <li>Tu partida se guarda en este navegador. Usa «Exportar» para copiarla a otro dispositivo.</li></ul></div>
  <div class="card"><h3>Partida guardada</h3><p>${c&&c.created?`<b>${esc(c.name)}</b> · nivel ${c.level} · día ${c.day} · ${c.hexes||0} hexágonos`:'No hay ningún personaje todavía.'}</p>
- <div class="choices"><button class="btn ghost" id="exp">⬇️ Exportar partida (.json)</button><label class="btn ghost">⬆️ Importar partida<input type="file" id="imp" accept=".json,application/json" hidden></label><button class="btn ghost" id="rst">🗑️ Borrar todo</button></div></div>`;
+ <div class="choices">${c&&c.created&&!c.dead?'<button class="btn" id="restart">🔄 Reiniciar aventura con este personaje</button>':''}<button class="btn ghost" id="exp">⬇️ Exportar partida (.json)</button><label class="btn ghost">⬆️ Importar partida<input type="file" id="imp" accept=".json,application/json" hidden></label><button class="btn ghost" id="rst">🗑️ Borrar todo</button></div></div>`;
+ const restart=$('#restart');if(restart)restart.onclick=restartAdventure;
  $('#exp').onclick=()=>download('dwarf-partida.json',JSON.stringify(S,null,1),'application/json');
  $('#imp').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const s=JSON.parse(t);if(!s||!('log'in s))throw 0;S=Object.assign({char:null,turn:null,log:[],view:'home'},s);CURS={create:null,turn:null};save();alert('Partida importada.');render();}catch(_){alert('El archivo no es una partida válida.');}});};
  $('#rst').onclick=()=>{if(confirm('¿Borrar personaje, turno y bitácora?')){S={char:null,turn:null,log:[],view:'home'};CURS={create:null,turn:null};save();render();}};}
