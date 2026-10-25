@@ -6,14 +6,14 @@
 <title>DWARF · Guía Virtual</title>
 <meta name="description" content="Guía virtual para jugar DWARF, el juego de rol solitario de Tavern Lore: creación de personaje y guía de turnos paso a paso.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:wght@400;600;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#15100c;--bg2:#211912;--card:#f1e4c6;--card2:#e4d0a6;--ink:#2a1f16;--ink2:#5b4632;--acc:#9e2f1e;--acc2:#b9771f;--line:#c9b48a;--ok:#2f6b3a;--bad:#8a2316;--txt:#eadfca;--mut:#a8977c;--hi:#f5cf7c}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:radial-gradient(ellipse at top,#2a1f16 0%,var(--bg) 60%) fixed,var(--bg);color:var(--txt);font-family:'EB Garamond',Georgia,serif;font-size:18px;line-height:1.45}
 header{padding:18px 16px 6px;text-align:center}
-h1{font-family:'UnifrakturMaguntia',serif;font-weight:400;font-size:58px;margin:0;color:var(--card);letter-spacing:3px;text-shadow:0 3px 0 #000}
+h1{font-family:'Cinzel',Georgia,'Times New Roman',serif;font-weight:700;font-size:58px;margin:0;color:var(--card);letter-spacing:6px;text-shadow:0 3px 0 #000}
 .sub{color:var(--mut);margin:0;font-style:italic}
 nav{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;position:sticky;top:0;background:rgba(21,16,12,.96);z-index:10;border-bottom:1px solid #3a2e23;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
@@ -144,7 +144,21 @@ footer{max-width:1120px;margin:0 auto}
  nav button{flex-basis:44px;width:44px;height:44px;border-radius:12px;font-size:21px}
  main{min-height:calc(100vh - 160px);padding:16px 12px 70px;border-radius:14px}
  footer{padding:10px 12px 24px}
+ .trip3d{height:230px}
 }
+.trip3d{position:relative;height:300px;margin-bottom:12px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.22);background:linear-gradient(#8fb4c9,#d9e4e8);box-shadow:0 12px 36px rgba(0,0,0,.25);touch-action:pan-y;cursor:grab}
+.trip3d[hidden]{display:none}
+.trip3d canvas{display:block;width:100%;height:100%}
+.trip-hud{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.trip-hud span{background:rgba(10,16,15,.72);color:#f4efe4;border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:3px 11px;font-size:15px}
+.trip-hud b{color:#f3bd7d}
+.trip-help{position:absolute;right:10px;bottom:8px;font-size:13px;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
+.dice3d{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(5,8,7,.55);cursor:pointer}
+.dice3d[hidden]{display:none}
+.dice-box{width:min(92vw,460px);border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.25);background:radial-gradient(ellipse at center,#2e5a40,#142a1e);box-shadow:0 18px 48px rgba(0,0,0,.45)}
+.dice-box canvas{display:block;width:100%;height:min(60vw,290px)}
+.dice-res{min-height:44px;padding:6px 12px 10px;text-align:center;font-size:24px;font-weight:700;color:#f3d3a7;text-shadow:0 1px 6px #000}
+.trip-off{display:grid;place-items:center;height:100%;padding:16px;text-align:center;color:#1d2422}
 </style>
 </head>
 <body data-view="home">
@@ -160,7 +174,10 @@ footer{max-width:1120px;margin:0 auto}
   <button data-v="log" aria-label="Bitácora" title="Bitácora">📖</button>
 </nav>
 <main id="app"></main>
-<footer>DWARF © Tavern Lore. Publicado bajo la Licencia de Terceros de MÖRK BORG. Guía de ayuda no oficial para uso personal; necesitas el manual del juego.</footer>
+<footer>DWARF © Tavern Lore. Publicado bajo la Licencia de Terceros de MÖRK BORG. Guía de ayuda no oficial para uso personal; necesitas el manual del juego.<br>Modelos 3D CC0 de KayKit (Kay Lousberg) y Quaternius.<br>Desarrollado por <a href="https://claude.com/claude-code" target="_blank" rel="noopener" style="color:inherit">Claude Code</a>.</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
 
 <script>
 'use strict';
@@ -261,7 +278,7 @@ const BEAST={
 const KW=[['engendro','vspawn'],['vampiro','vampire'],['guerrero esqueleto','skelwar'],['esqueleto','skeleton'],['bandido','bandit'],['goblin','goblin'],['araña','spider'],['serpiente gigante','gsnake'],['serpiente','snakes'],['gigante','giant'],['ogro','ogre'],['trol','troll'],['zombi','zombie'],['mago loco','wizard'],['bruja','hag'],['espectro','wraith'],['orco','orc'],['puma','lion'],['murciélago','bats'],['hidra','hydra'],['furtivo','poacher'],['monje','acolyte'],['acólito','acolyte'],['cultista','cultist'],['lobo','wolf'],['oso','bear'],['jabalí','boar'],['rata','rats'],['momia','mummy'],['hada','fairy']];
 
 /* ================= ESTADO ================= */
-function blankChar(){return {name:'',bg:0,naked:false,trait:'',str:0,dex:0,con:0,pre:0,raw:{},hp:0,hpMax:0,armor:0,armorName:'Ninguna',armorRed:0,dexPen:0,extraShield:false,weapon:{n:'Puños',die:'d4',ranged:false,plus:0},gold:0,rations:3,mushrooms:2,merriment:0,items:[],scrolls:[],abilities:[],season:null,terrain:null,day:1,hexes:0,hungry:false,poisoned:false,wounded:false,bleeding:false,weaponDamaged:false,hasBow:false,hasRod:false,level:1,xp:0,dayMods:{},nextMods:{},nextHalf:false,notes:'',created:false};}
+function blankChar(){return {name:'',bg:0,naked:false,trait:'',str:0,dex:0,con:0,pre:0,raw:{},hp:0,hpMax:0,armor:0,armorName:'Ninguna',armorRed:0,dexPen:0,extraShield:false,weapon:{n:'Puños',die:'d4',ranged:false,plus:0},gold:0,rations:3,mushrooms:2,merriment:0,items:[],scrolls:[],abilities:[],season:null,terrain:null,day:1,hexes:0,hungry:false,poisoned:false,wounded:false,bleeding:false,weaponDamaged:false,hasBow:false,hasRod:false,level:1,xp:0,dayMods:{},nextMods:{},nextHalf:false,trip:null,notes:'',created:false};}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==='object')return Object.assign({char:null,turn:null,log:[],view:'home'},s);}catch(e){}return {char:null,turn:null,log:[],view:'home'};}
 let S=load();
 const ch=()=>S.char;
@@ -281,7 +298,11 @@ function gainMush(n){const c=ch();c.mushrooms=Math.min(maxMush(),c.mushrooms+n);
 
 /* ================= DADOS ================= */
 function range(d){if(d==='d66')return[11,66];const m=/^(\d*)d(\d+)$/.exec(d);const n=+(m[1]||1),s=+m[2];return[n,n*s];}
-function roll(d,reroll){if(d==='d66')return rnd(6)*10+rnd(6);const m=/^(\d*)d(\d+)$/.exec(d);const n=+(m[1]||1),s=+m[2];let t=0;for(let i=0;i<n;i++){let r;do{r=rnd(s);}while(reroll&&reroll.includes(r));t+=r;}return t;}
+/* rollParts devuelve el total y cada dado ({s: caras, v: valor, tens/zero: dados de decenas y unidades}) para la animación 3D. */
+function rollParts(d,reroll){if(d==='d66'){const a=rnd(6),b=rnd(6);return{v:a*10+b,dice:[{s:6,v:a,tens:1},{s:6,v:b}]};}
+ const m=/^(\d*)d(\d+)$/.exec(d);const n=+(m[1]||1),s=+m[2],dice=[];let t=0;for(let i=0;i<n;i++){let r;do{r=rnd(s);}while(reroll&&reroll.includes(r));t+=r;dice.push({s,v:r});}
+ if(s===100){const u=t%10;return{v:t,dice:[{s:10,v:(t-u)%100,tens:1},{s:10,v:u,zero:1}]};}return{v:t,dice};}
+const roll=(d,reroll)=>rollParts(d,reroll).v;
 
 /* ================= MOTOR DE PASOS ================= */
 const stage=()=>$('#stage');
@@ -303,7 +324,7 @@ function ask(o){setCur({k:'ask',o});const[mn0,mx0]=range(o.dice);const mn=o.min?
   if(bad){$('#err').textContent=`Valor inválido: debe estar entre ${mn} y ${mx}${o.dice==='d66'?' y cada dígito de 1 a 6':''}.`;return;}o.onResult(v);};
  $('#ok').onclick=()=>go(parseInt(inp.value,10));
  inp.onkeydown=e=>{if(e.key==='Enter')go(parseInt(inp.value,10));};
- $('#auto').onclick=()=>{const v=roll(o.dice,o.reroll);inp.value=v;go(v);};
+ $('#auto').onclick=e=>{const p=rollParts(o.dice,o.reroll),b=e.currentTarget;b.disabled=true;diceAnim(p,()=>{b.disabled=false;inp.value=p.v;go(p.v);});};
  if(o.cancel)$('#cx').onclick=o.cancel.fn;
  scrollStage();}
 function show(o){setCur({k:'show',o});
@@ -421,7 +442,7 @@ function sheetSummary(c){return `<table class="t sheet">
  <tr><td>Arma</td><td>${esc(c.weapon.n)} ${c.weapon.die}${c.weapon.plus?' +1':''}</td></tr>
  <tr><td>Oro</td><td>${c.gold}</td></tr><tr><td>Víveres</td><td>${c.rations} raciones · ${c.mushrooms} hongos</td></tr>
  <tr><td>Equipo</td><td>${c.items.map(i=>esc(i.n)+(i.q>1?` ×${i.q}`:'')).join(', ')||'—'}</td></tr>
- <tr><td>Viaje</td><td>${c.season||'—'} · ${c.terrain!=null?TERR[c.terrain]:'—'}</td></tr></table>`;}
+ <tr><td>Viaje</td><td>${c.season||'—'} · ${c.terrain!=null?TERR[c.terrain]:'—'}${c.trip?` · ${esc(c.trip.name)} ${c.trip.cells.length}/${c.trip.len} casillas${c.trip.done?' ✅':''}`:''}</td></tr></table>`;}
 function createdSummary(){const c=ch();show({title:c.name||'Tu enano',table:'Hoja de personaje',text:sheetSummary(c),choices:[{label:'🗺️ Ir a la Guía de turnos',fn:()=>go('turn')},{label:'Crear un enano nuevo (reemplaza al actual)',cls:'ghost',fn:()=>{if(confirm('¿Crear un personaje nuevo? Se perderá el actual.'))createIntro();}}]});}
 
 /* ================= GUÍA DE TURNOS ================= */
@@ -456,14 +477,23 @@ function turnForm(){const c=ch()||blankChar();setCur({k:'fn',fn:turnForm});
 function resumeTurn(){const t=S.turn||{};const map={ration:dRation,plan:dPlan,hex:dHex,cave:dCave,forage:forageMenu,camp:campMenu};
  if(t.w&&map[t.phase])return map[t.phase]();dayStart();}
 
-function dayStart(){const c=ch();S.turn={phase:'dayStart'};c.dayMods=c.nextMods||{};c.nextMods={};S.turn.half=!!c.nextHalf;c.nextHalf=false;save();
+function dayStart(){const c=ch();
  if(!c.season)return chooseSeason(dayStart);
- const intro=`<p>Día <b>${c.day}</b> · ${c.season} · ${c.terrain!=null?TERR[c.terrain]:'terreno por definir'}</p>
+ if(!c.trip||c.trip.done)return chooseTrip(dayStart);
+ S.turn={phase:'dayStart'};c.dayMods=c.nextMods||{};c.nextMods={};S.turn.half=!!c.nextHalf;c.nextHalf=false;save();
+ const intro=`<p>Día <b>${c.day}</b> · ${c.season} · ${c.terrain!=null?TERR[c.terrain]:'terreno por definir'}<br>Viaje ${c.trip.name.toLowerCase()}: casilla <b>${c.trip.cells.length}</b> de ${c.trip.len}</p>
  <ol class="proc"><li>Tirar el clima</li><li>Consumir una ración</li><li>Hexágono 1: terreno → punto de interés → encuentro</li><li>Hexágono 2: terreno → punto de interés → encuentro</li><li>Acampar y encuentro nocturno</li></ol>
  ${S.turn.half?'<p class="warn">Resaca: hoy viajas a velocidad ½.</p>':''}${Object.keys(c.dayMods).length?`<p class="warn">Efectos de hoy: ${Object.entries(c.dayMods).map(([k,v])=>`${ATTR[k]} ${fmt(v)}`).join(', ')}</p>`:''}`;
  if(c.poisoned)return show({title:`Día ${c.day}`,table:'Procedimiento diario',text:intro+'<p class="warn">Estás envenenado: puedes intentar superarlo con una prueba de CON DR14.</p>',
   choices:[{label:'Probar CON DR14',fn:()=>test({title:'Superar el veneno',table:'Envenenado',attr:'con',dr:14,onDone:ok=>{if(ok){c.poisoned=false;save();}msg(ok?'Te recuperas del veneno':'Sigues envenenado','Envenenado',ok?'Ya no sufres el −1.':'Mañana podrás volver a intentarlo.',dWeather,'1 · Tirar el clima');}})}]});
  show({title:`Día ${c.day}`,table:'Procedimiento diario',text:intro,choices:[{label:'1 · Tirar el clima',fn:dWeather}]});}
+const TRIPS=[['Corto',8,'Unos 4–8 días de marcha.'],['Medio',14,'Unos 7–14 días de marcha.'],['Largo',20,'Unos 10–20 días de marcha.']];
+function chooseTrip(next){const c=ch(),old=c.trip;
+ show({title:'Tipo de viaje',table:'Viaje',text:`${old&&old.done?`<p>✅ Completaste el viaje <b>${esc(old.name.toLowerCase())}</b> de ${old.len} casillas.</p>`:''}<p>¿Qué distancia recorrerá este viaje? Cada casilla equivale a un hexágono; el escenario 3D marca tu avance por el camino.</p>`,
+  choices:TRIPS.map(([n,len,h])=>({label:`${n} (${len} casillas)`,help:h,fn:()=>{c.trip={name:n,len,cells:[],cur:null,day0:c.day};log('Viaje',`Tipo de viaje: ${n} (${len} casillas)`);save();next();}}))});}
+const tripCell=()=>{const tr=ch()&&ch().trip;return tr?tr.cur||tr.cells[tr.cells.length-1]||null:null;};
+function tripEnter(){const c=ch(),tr=c.trip;if(tr&&!tr.done){tr.cur={t:c.terrain??0};save();}}
+function tripMark(k){const cl=tripCell();if(!cl)return;if(k==='poi')cl.p=1;else if(k==='enc')cl.e=1;else{cl.m=cl.m||[];if(!cl.m.includes(k))cl.m.push(k);}save();}
 function weatherFx(w){const f=w.forage==='X'?'no se puede forrajear':w.forage?`forrajeo ${fmt(w.forage)}`:'forrajeo sin modificador';
  const s=w.speed==='X'?'<span class="warn">No puedes viajar. ¡Busca una cueva YA!</span>':w.speed==='½'?'Velocidad ½: solo 1 hexágono hoy.':'Velocidad normal: 2 hexágonos.';return `<p>${s}<br>${f[0].toUpperCase()+f.slice(1)}.</p>`;}
 function wRows(s){return WEATHER[s].map((w,i)=>[i+1,`${w.n} · ${w.speed==='X'?'no viajas':w.speed==='½'?'viaje ½':'viaje normal'} · ${w.forage==='X'?'sin forrajeo':'forrajeo '+fmt(w.forage)}`]);}
@@ -485,19 +515,19 @@ function caveEnc(after){ask({title:'Encuentros en cueva',table:'Encuentros en cu
  const acts=[[{label:'🗝️ Explorar la cueva (mazmorra)',fn:()=>dungeon(after)}],[{label:'⚔️ Combatir al Oso',fn:()=>combatSetup('bear','1',after)},{label:'🗣️ Intentar evitarlo (Oráculo)',cls:'ghost',fn:after}],[{label:'⚔️ Combatir a los Murciélagos',fn:()=>combatSetup('bats','2d6',after)}],
   [{label:'🗣️ Reacción del extraño (d10)',fn:()=>reaction(after,'Alguien más está en la cueva')}],[{label:'🎲 Suministro (d66)',fn:()=>supplyRoll(after)}],[{label:'Continuar',fn:after}]][v-1];
  show({title:'Encuentro en cueva',table:'Encuentros en cueva (d6)',roll:v,text:`<p class="big">${CAVE[v-1]}</p>`,choices:acts});}});}
-function dPlan(){const t=S.turn;t.phase='plan';save();const w=t.w,half=w.speed==='½'||t.half,n=half?1:2,canF=w.forage!=='X';
- show({title:'3 · Plan del día',table:'Viaje',text:`Puedes avanzar <b>${n}</b> hexágono${n>1?'s':''} hoy${half?' (velocidad ½)':''}. Si forrajeas solo avanzas 1.${canF?'':'<br><span class="warn">El clima no permite forrajear.</span>'}<br>Con arco o caña puedes cazar o pescar además de forrajear.<br>Se tiran terreno, punto de interés y encuentro <b>por cada hexágono</b>.`,
+function dPlan(){const t=S.turn,tr=ch().trip;t.phase='plan';save();const w=t.w,half=w.speed==='½'||t.half,rem=tr&&!tr.done?tr.len-tr.cells.length:99,n=Math.min(half?1:2,rem),canF=w.forage!=='X';
+ show({title:'3 · Plan del día',table:'Viaje',text:`Puedes avanzar <b>${n}</b> hexágono${n>1?'s':''} hoy${half?' (velocidad ½)':''}${rem<=2?` (te queda${rem>1?'n':''} ${rem} casilla${rem>1?'s':''} para el destino)`:''}. Si forrajeas solo avanzas 1.${canF?'':'<br><span class="warn">El clima no permite forrajear.</span>'}<br>Con arco o caña puedes cazar o pescar además de forrajear.<br>Se tiran terreno, punto de interés y encuentro <b>por cada hexágono</b>.`,
   choices:[{label:`Viajar ${n} hexágono${n>1?'s':''}`,help:'Avanzas hacia tu destino y exploras cada hexágono, pero no buscas comida.',fn:()=>startHexes(n,false)},...(canF?[{label:'Forrajear y viajar 1 hexágono',cls:'ghost',help:'Buscas comida para aumentar tus raciones y avanzas solo 1 hexágono.',fn:()=>startHexes(1,true)}]:[]),{label:'No viajar hoy',cls:'ghost',help:'Te quedas en este hexágono; puedes buscar comida y luego acampar.',fn:()=>{t.hexTotal=0;t.hexIdx=0;t.forage=canF;save();afterHexes();}}]});}
 function startHexes(n,f){const t=S.turn;t.hexTotal=n;t.hexIdx=0;t.forage=f;save();dHex();}
 function dHex(){const t=S.turn,c=ch();t.phase='hex';save();const k=t.hexIdx+1,title=`Hexágono ${k} de ${t.hexTotal} · Terreno`;
- const done=(r,txt,table)=>show({title:'Terreno',table,roll:r,text:txt,choices:[{label:'Buscar punto de interés',fn:dPOI}]});
+ const done=(r,txt,table)=>{tripEnter();show({title:'Terreno',table,roll:r,text:txt,choices:[{label:'Buscar punto de interés',fn:dPOI}]});};
  if(c.terrain==null)return ask({title,table:'Terreno (d6)',dice:'1d6',text:tbl(nrows(TERR)),onResult:v=>{c.terrain=v-1;log('Terreno',TERR[v-1]);done(v,`Estás en <b>${TERR[v-1]}</b>.`,'Terreno (d6)');}});
  ask({title,table:'Hexágono adicional (d6)',dice:'1d6',text:`Terreno anterior: <b>${TERR[c.terrain]}</b>`+tbl([['1–3','Mismo terreno que el anterior'],['4–6','Tira terreno nuevo']]),onResult:v=>{
   if(v<=3){log('Hexágono adicional',`${v}: sigues en ${TERR[c.terrain]}`);return done(v,`Sigues en <b>${TERR[c.terrain]}</b>.`,'Hexágono adicional (d6)');}
   log('Hexágono adicional',`${v}: terreno nuevo`);ask({title:'Terreno nuevo',table:'Terreno (d6)',dice:'1d6',text:tbl(nrows(TERR)),onResult:x=>{c.terrain=x-1;log('Terreno',TERR[x-1]);done(x,`Entras en <b>${TERR[x-1]}</b>.`,'Terreno (d6)');}});}});}
 function dPOI(){ask({title:'¿Punto de interés?',table:'Punto de interés (comprobación d6)',dice:'1d6',text:tbl([['1–3','Nada'],['4–6','Tira d100 en la tabla de Puntos de Interés']]),onResult:v=>{log('POI (comprobación)',`${v}: ${v<=3?'nada':'sí'}`);
  if(v<=3)return msg('Sin punto de interés','Punto de interés (comprobación d6)','Nada destacable en este hexágono.',dEnc,'¿Encuentro?',{roll:v});
- ask({title:'Punto de interés',table:'Puntos de Interés (d100)',dice:'d100',onResult:p=>{log('Puntos de Interés (d100)',`${p}: ${POI[p-1]}`);poiResult(p,dEnc);}});}});}
+ ask({title:'Punto de interés',table:'Puntos de Interés (d100)',dice:'d100',onResult:p=>{log('Puntos de Interés (d100)',`${p}: ${POI[p-1]}`);tripMark('poi');poiResult(p,dEnc);}});}});}
 function poiResult(p,next){const name=POI[p-1],low=name.toLowerCase(),acts=[];const back=()=>poiResult(p,next);
  if(low.includes('asentamiento'))acts.push({label:'🏘️ Visitar el asentamiento',fn:()=>settlement(next)});
  if(low.includes('metrópolis'))acts.push({label:'🏙️ Visitar la metrópolis (ciudad)',fn:()=>settlement(next,3)});
@@ -514,7 +544,7 @@ function poiResult(p,next){const name=POI[p-1],low=name.toLowerCase(),acts=[];co
 function dEnc(){ask({title:'¿Encuentro?',table:'Encuentro (comprobación d6)',dice:'1d6',text:tbl([['1–3','Nada'],['4–6','Tira d20 en la tabla del terreno actual']]),onResult:v=>{log('Encuentro (comprobación)',`${v}: ${v<=3?'nada':'sí'}`);
  if(v<=3)return msg('Camino tranquilo','Encuentro (comprobación d6)','No te cruzas con nadie.',finishHex,'Continuar',{roll:v});
  const tr=ch().terrain??0,table=`Encuentros — ${TERR[tr]} (d20)`;
- ask({title:'Encuentro',table,dice:'1d20',onResult:e=>{const txt=ENC[tr][e-1];log(table,`${e}: ${txt}`);encounterResult(txt,table,e,finishHex);}});}});}
+ ask({title:'Encuentro',table,dice:'1d20',onResult:e=>{const txt=ENC[tr][e-1];log(table,`${e}: ${txt}`);tripMark('enc');encounterResult(txt,table,e,finishHex);}});}});}
 function encounterResult(txt,table,r,next){const low=txt.toLowerCase(),acts=[],det=detect(txt),back=()=>encounterResult(txt,table,r,next);
  if(/arma aleatoria/.test(low))acts.push({label:'🎲 ¿Qué arma? (1d6)',fn:()=>ask({title:'Arma encontrada',table:'Armas (d6)',dice:'1d6',onResult:v=>{const w=WEAP[v];addItem(w.n);if(w.ranged)ch().hasBow=true;log('Armas (d6)',w.n);msg('Arma encontrada','Armas (d6)',`<p class="big">${w.n}</p>Añadida a tu equipo. Cámbiala en la Hoja si quieres empuñarla.`,next,'Continuar',{roll:v});}})});
  else if(/pieza de armadura/.test(low))acts.push({label:'🎲 ¿Qué armadura? (1d4)',fn:()=>ask({title:'Armadura encontrada',table:'Armadura (d4)',dice:'1d4',onResult:v=>{addItem(ARMOR[v].n);log('Armadura (d4)',ARMOR[v].n);msg('Armadura encontrada','Armadura (d4)',`<p class="big">${ARMOR[v].n}</p>Añadida al equipo. Si la equipas, actualízala en Características.`,next,'Continuar',{roll:v});}})});
@@ -528,7 +558,11 @@ function encounterResult(txt,table,r,next){const low=txt.toLowerCase(),acts=[],d
  if(!det)acts.push({label:'⚔️ Combatir (elegir criatura)',cls:'ghost',fn:()=>combatSetup(null,'1',next)});
  acts.push({label:'Seguir el camino',cls:'ghost',fn:next});
  show({title:'Encuentro',table,roll:r,text:`<p class="big">${esc(txt)}</p><p>Decide cómo actuar: si puede hablar, tira Reacción; para preguntas abiertas usa el Oráculo (Herramientas).</p>`,choices:acts});}
-function finishHex(){const t=S.turn,c=ch();t.hexIdx++;c.hexes=(c.hexes||0)+1;save();if(t.hexIdx<t.hexTotal)dHex();else afterHexes();}
+function finishHex(){const t=S.turn,c=ch(),tr=c.trip;t.hexIdx++;c.hexes=(c.hexes||0)+1;
+ if(tr&&!tr.done){tr.cells.push(tr.cur||{t:c.terrain??0});tr.cur=null;
+  if(tr.cells.length>=tr.len){tr.done=true;t.hexTotal=t.hexIdx;const d=c.day-(tr.day0||c.day)+1;log('Viaje',`Destino alcanzado: viaje ${tr.name.toLowerCase()} (${tr.len} casillas) en ${d} día${d>1?'s':''}`);save();
+   return msg('🏔️ ¡Destino alcanzado!','Viaje',`Recorriste las <b>${tr.len}</b> casillas del viaje <b>${esc(tr.name.toLowerCase())}</b> en ${d} día${d>1?'s':''}.<br>Termina el día con normalidad; al amanecer podrás elegir un nuevo viaje.`,afterHexes);}}
+ save();if(t.hexIdx<t.hexTotal)dHex();else afterHexes();}
 function afterHexes(){if(S.turn.forage)forageMenu();else dCamp(false);}
 
 /* ---------- Forrajeo, caza y pesca ---------- */
@@ -706,12 +740,12 @@ function combatSetup(key,count,after){count=count||'1';const isDice=/d/.test(cou
  ${isDice?`<button class="btn ghost" id="cr" style="width:100%;margin-top:8px">🎲 Tirar ${count} por mí</button>`:''}<div id="bi" class="txt" style="margin-top:8px"></div>
  <div class="choices"><button class="btn" id="cs">Comenzar el combate</button><button class="btn ghost" id="cc">Cancelar</button></div><div id="err" class="err"></div></div>`;
  const info=()=>{const b=BEAST[$('#cb').value];$('#bi').innerHTML=`<b>${b.n}</b>: PV ${b.hp} · Armadura −${b.ar} · Moral ${b.mo??'— (no huye)'} · Ataque ${b.d}${b.sp?`<br><b>${b.sp.t}:</b> ${b.sp.desc}`:''}`;};
- $('#cb').onchange=info;info();if(isDice)$('#cr').onclick=()=>{$('#cn').value=roll(norm(count));};
+ $('#cb').onchange=info;info();if(isDice)$('#cr').onclick=()=>{const p=rollParts(norm(count));diceAnim(p,()=>{$('#cn').value=p.v;});};
  $('#cc').onclick=after;$('#cs').onclick=()=>{const n=parseInt($('#cn').value,10);if(!(n>=1&&n<=20)){$('#err').textContent='Indica la cantidad (1–20).';return;}startCombat($('#cb').value,n,after);};scrollStage();}
 const alive=()=>K.en.filter(e=>!e.dead&&!e.fled);
 function enemyList(){return `<div>${K.en.map(e=>`<div class="enemy ${e.dead||e.fled?'dead':''}"><span>${esc(K.b.n)} #${e.id}${e.fled?' (huyó)':''}</span><span class="hp"><i style="width:${100*e.hp/e.max}%"></i></span><b>${e.hp}/${e.max}</b></div>`).join('')}</div>`;}
 function startCombat(key,n,after){const b=BEAST[key];K={key,b,en:Array.from({length:n},(_,i)=>({id:i+1,hp:b.hp,max:b.hp,dead:false,fled:false,mc:false})),round:1,after,skip:0,berserk:0,gc:false,ex:false,poison:false};
- log('Combate',`${n}× ${b.n}`);
+ log('Combate',`${n}× ${b.n}`);tripMark(key);
  show({title:`Combate: ${n}× ${b.n}`,table:'Combate',text:`${enemyList()}<p>Armadura enemiga −${b.ar} · Ataque ${b.d} · Moral ${b.mo??'—'}${b.sp?`<br><b>${b.sp.t}:</b> ${b.sp.desc}`:''}</p><p>¿Están desprevenidos? Puedes intentar un <b>ataque sorpresa</b> (DES DR${hasAb('surprise')?8:12}). Si no, tirad iniciativa.</p>`,
   choices:[{label:'🎲 Iniciativa (1d6 cada uno)',fn:initiative},{label:`🗡️ Ataque sorpresa (DES DR${hasAb('surprise')?8:12})`,cls:'ghost',fn:()=>test({title:'Ataque sorpresa',table:'Combate · Ataque sorpresa',attr:'dex',dr:hasAb('surprise')?8:12,onDone:ok=>msg(ok?'¡Los sorprendes!':'Te ven venir','Combate · Ataque sorpresa',ok?'Atacas primero.':'El enemigo te ve y ataca primero.',ok?playerTurn:enemyTurn)})}]});}
 function initiative(){ask({title:'Iniciativa: tú',table:'Combate · Iniciativa',dice:'1d6',text:'Tú y el enemigo tiráis 1d6. El más alto actúa primero.',onResult:p=>
@@ -787,6 +821,159 @@ const toolsHTML=()=>`<details class="toolbox"><summary>🧰 Herramientas (se pue
  <button data-t="settle">🏘️ Asentamiento</button><button data-t="edit">✏️ Características</button></div></details>`;
 function bindTools(){document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(b.dataset.t==='edit')return turnForm();tool(TOOLS[b.dataset.t]);});}
 
+/* ================= ESCENARIO 3D DEL VIAJE ================= */
+/* Camino lineal de casillas (Three.js). Las casillas recorridas toman el color y la decoración de su terreno; el enano camina hasta la casilla actual y los monstruos combatidos quedan en su casilla. */
+const STEP=2.4;
+const TCOL=[0x3f7a3a,0xc2b866,0x7aa152,0x8d9298,0x5b6640,0x5f95c0];
+const SKY={Invierno:0xc9d6dd,Primavera:0x9cc6dc,Verano:0x8fc1e3,'Otoño':0xc7b49a};
+const GCOL={Invierno:0xe6edf0,Primavera:0x6f9d4c,Verano:0x8f9c47,'Otoño':0x9b7a45};
+const FCOL={Invierno:0x2f5446,Primavera:0x3f8a3c,Verano:0x2f6e2c,'Otoño':0xc0662a};
+const BEMO={acolyte:'🧎',bandit:'🥷',bats:'🦇',bear:'🐻',boar:'🐗',cultist:'🧙',dragon:'🐉',fairy:'🧚',giant:'🗿',gsnake:'🐍',spider:'🕷️',hag:'🧙‍♀️',hydra:'🐲',wizard:'🧙‍♂️',goblin:'👺',lion:'🐆',mummy:'🧟',ogre:'👹',orc:'👹',poacher:'🏹',rats:'🐀',skeleton:'💀',skelwar:'☠️',snakes:'🐍',troll:'🧌',vampire:'🧛',vspawn:'🧛',wolf:'🐺',wraith:'👻',zombie:'🧟',companion:'👾'};
+/* Modelos glTF CC0 de KayKit y Quaternius (ver modelos/LICENCIAS.md). Se cargan bajo demanda; mientras no están listos, o en file:// (el navegador bloquea la carga), se usan las primitivas y los emojis. */
+const BMOD={bandit:['personajes/Rogue_Hooded',1.3],cultist:['personajes/Rogue_Hooded',1.3],acolyte:['personajes/Mage',1.3],wizard:['personajes/Mage',1.4],poacher:['personajes/Rogue',1.3],skeleton:['personajes/Skeleton_Minion',1.3],skelwar:['personajes/Skeleton_Warrior',1.4],hag:['criaturas/Witch',1.4],wolf:['criaturas/Wolf',1.1],rats:['criaturas/Rat',.5],snakes:['criaturas/Snake',.7],gsnake:['criaturas/Snake_angry',1.4],spider:['criaturas/Spider',.9],
+ orc:['criaturas/Orc',1.4],goblin:['criaturas/Monkroose',1],troll:['criaturas/BlueDemon',1.7],ogre:['criaturas/Tribal',1.7],giant:['criaturas/Yeti',2.3],zombie:['criaturas/Orc_Skull',1.3],vampire:['criaturas/Demon',1.4],companion:['criaturas/Alien',1.2],
+ dragon:['criaturas/Flying_Dragon_Evolved',2.4,.5],hydra:['criaturas/Flying_Dragon',1.8,.4],bats:['criaturas/Flying_Goleling',.7,.7],vspawn:['criaturas/Flying_Demon',1,.5],wraith:['criaturas/Flying_Ghost_Skull',1.1,.5],fairy:['criaturas/Flying_Squidle',.7,.7]};
+let V3=null,modT=0;const MATC={},TEXC={},MODC={};
+function bbox(s){const b=new THREE.Box3(),v=new THREE.Vector3();s.updateMatrixWorld(true);
+ s.traverse(o=>{if(!o.isMesh)return;const p=o.geometry.attributes.position,st=Math.max(1,p.count/500|0);if(o.isSkinnedMesh)o.skeleton.update();
+  for(let i=0;i<p.count;i+=st){v.fromBufferAttribute(p,i);if(o.isSkinnedMesh)o.boneTransform(i,v);b.expandByPoint(v.applyMatrix4(o.matrixWorld));}});return b;}
+function loadModel(p){if(MODC[p])return MODC[p];const m=MODC[p]={st:0};if(!THREE.GLTFLoader||!THREE.SkeletonUtils||location.protocol==='file:'){m.st=-1;return m;}
+ new THREE.GLTFLoader().load('modelos/'+p+'.glb',g=>{const s=g.scene,seen=new Set();s.traverse(o=>{if(o.isSkinnedMesh)m.sk=1;if(!o.isMesh)return;o.castShadow=o.receiveShadow=true;
+   [].concat(o.material).forEach(x=>{if(seen.has(x))return;seen.add(x);if(x.color)x.color.convertLinearToSRGB();if(x.map){x.map.encoding=THREE.LinearEncoding;x.map.needsUpdate=true;}x.needsUpdate=true;});});const b=bbox(s),z=b.getSize(new THREE.Vector3());
+  Object.assign(m,{st:1,s,an:g.animations,h:Math.max(z.x,z.y,z.z),y0:b.min.y});clearTimeout(modT);modT=setTimeout(()=>{if(V3){V3.key='';trip3dSync();}},150);},undefined,()=>{m.st=-1;});return m;}
+function inst(p,size,mix){const m=loadModel(p);if(m.st!==1)return null;const o=m.sk?THREE.SkeletonUtils.clone(m.s):m.s.clone(),k=size/m.h,w=new THREE.Group();o.scale.multiplyScalar(k);o.position.y-=m.y0*k;w.add(o);
+ if(mix&&m.an.length){const mx=new THREE.AnimationMixer(o),act={};m.an.forEach(c=>act[c.name]=mx.clipAction(c));Object.assign(w.userData,{mx,act});if(act.Idle){act.Idle.time=Math.random()*act.Idle.getClip().duration;act.Idle.play();w.userData.cur='Idle';}mix.push(mx);}return w;}
+const mat=c=>MATC[c]||(MATC[c]=Object.assign(new THREE.MeshStandardMaterial({color:c,flatShading:true,roughness:.85}),{userData:{shared:1}}));
+function rng(a){return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function txTex(s,num){const k=(num?'#':'')+s;if(TEXC[k])return TEXC[k];const cv=document.createElement('canvas');cv.width=cv.height=128;const x=cv.getContext('2d');x.textAlign='center';x.textBaseline='middle';
+ if(num){x.fillStyle='rgba(20,15,10,.78)';x.beginPath();x.arc(64,64,56,0,7);x.fill();x.fillStyle='#f3d3a7';x.font="bold 64px Cinzel, Georgia, serif";x.fillText(s,64,68);}else{x.font='96px serif';x.fillText(s,64,72);}
+ return TEXC[k]=new THREE.CanvasTexture(cv);}
+function emo(e,s){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:txTex(e)}));sp.scale.set(s,s,1);return sp;}
+function put(g,geo,col,x,y,z,s=1){const m=new THREE.Mesh(geo,mat(col));m.position.set(x,y,z);if(typeof s==='number')m.scale.setScalar(s);else m.scale.set(...s);m.castShadow=m.receiveShadow=true;g.add(m);return m;}
+function dwarfModel(){const g=new THREE.Group(),G=THREE;
+ put(g,new G.BoxGeometry(.16,.26,.18),0x3b2a1e,-.1,.13,0);put(g,new G.BoxGeometry(.16,.26,.18),0x3b2a1e,.1,.13,0);
+ put(g,new G.CylinderGeometry(.24,.31,.52,8),0x8e3424,0,.5,0);put(g,new G.CylinderGeometry(.28,.28,.07,8),0x2a1d14,0,.42,0);
+ for(const s of[-1,1]){const a=put(g,new G.CylinderGeometry(.07,.08,.38,6),0x8e3424,s*.31,.56,-.04);a.rotation.z=s*.25;}
+ put(g,new G.SphereGeometry(.19,10,8),0xe2b58c,0,.9,0);put(g,new G.SphereGeometry(.07,6,5),0xd0987a,0,.89,-.19);
+ for(const s of[-1,1])put(g,new G.SphereGeometry(.025,5,4),0x111111,s*.07,.95,-.17);
+ put(g,new G.ConeGeometry(.21,.5,8),0xc96a2b,0,.65,-.13).rotation.x=Math.PI;
+ put(g,new G.SphereGeometry(.21,10,6,0,Math.PI*2,0,Math.PI/2),0x9aa2a8,0,.96,0);
+ for(const s of[-1,1])put(g,new G.ConeGeometry(.05,.24,6),0xf1e6cf,s*.24,1.07,0).rotation.z=-s*1.1;
+ put(g,new G.CylinderGeometry(.025,.025,.85,5),0x6b4a2b,.42,.55,-.05);put(g,new G.BoxGeometry(.05,.2,.24),0xb8bec4,.42,.9,-.13);
+ g.scale.setScalar(1.5);return g;}
+function dwarfUp(){const v=V3;if(v.dwA)return;const w=inst('personajes/Barbarian',1.25,v.dmix=[]);if(!w)return;
+ const hb=w.getObjectByName('head');if(hb){w.updateMatrixWorld(true);const hp=hb.getWorldPosition(new THREE.Vector3()),bd=new THREE.Mesh(new THREE.ConeGeometry(.15,.34,8),mat(0xc96a2b));
+  bd.rotation.x=Math.PI;bd.position.set(hp.x,hp.y+.06,hp.z+.2);bd.castShadow=true;w.add(bd);hb.attach(bd);}
+ w.rotation.y=Math.PI;w.scale.set(1.2,.92,1.2);v.dw.clear();v.dw.add(w);v.dwA=w.userData;}
+function trip3dInit(){const G=THREE,r=new G.WebGLRenderer({antialias:true});r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));r.shadowMap.enabled=true;r.shadowMap.type=G.PCFSoftShadowMap;
+ const sc=new G.Scene(),cam=new G.PerspectiveCamera(45,2,.1,200),sun=new G.DirectionalLight(0xfff1d6,.9);
+ sc.add(new G.HemisphereLight(0xe3eef5,0x4a3b2d,.7));sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-14,right:14,top:14,bottom:-14,near:1,far:60});sc.add(sun,sun.target);
+ const ground=new G.Mesh(new G.PlaneGeometry(400,400),new G.MeshStandardMaterial({color:0x6f9d4c,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;sc.add(ground);
+ const world=new G.Group(),dw=new G.Group();dw.add(dwarfModel());sc.add(world,dw);
+ const geo={tile:new G.BoxGeometry(STEP*.88,.25,STEP*.88),trunk:new G.CylinderGeometry(.08,.11,.5,6),cone:new G.ConeGeometry(.5,1.2,7),hill:new G.SphereGeometry(1,10,6,0,Math.PI*2,0,Math.PI/2),mount:new G.ConeGeometry(1.3,2.6,5),cap:new G.ConeGeometry(.55,1.1,5),tuft:new G.ConeGeometry(.12,.38,4),rock:new G.DodecahedronGeometry(.25,0),disc:new G.CylinderGeometry(.9,.9,.03,12),reed:new G.CylinderGeometry(.02,.02,.6,4),water:new G.BoxGeometry(4,.05,STEP),flat:new G.PlaneGeometry(.62,.62),box:new G.BoxGeometry(1,1,1)};
+ geo.edges=new G.EdgesGeometry(geo.tile);
+ V3={r,sc,cam,sun,ground,world,dw,geo,yaw:1.1,dist:8,look:new G.Vector3(),target:0,key:'',raf:0,el:null,t:0,last:0,mix:[],dmix:[],dwA:null};
+ const cv=r.domElement;let px=null;cv.addEventListener('pointerdown',e=>{px=e.clientX;cv.style.cursor='grabbing';try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+ cv.addEventListener('pointermove',e=>{if(px==null)return;V3.yaw-=(e.clientX-px)*.008;px=e.clientX;});
+ const up=()=>{px=null;cv.style.cursor='';};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);}
+function decor(g,t,i,season){const R=rng(i*97+t*13+7),z0=-i*STEP,q=V3.geo,fol=FCOL[season]||0x3f8a3c,snow=season==='Invierno',suf=snow?'_Snow':season==='Otoño'?'_Autumn':'';
+ const md=(p,sz,x,z)=>{const o=inst('naturaleza/'+p,sz);if(!o)return false;o.position.set(x,0,z);o.rotation.y=(x*7.3+z*3.1)%6.28;g.add(o);return true;},rock=snow?'Rock_Snow_1':'Rock_Moss_1';
+ for(const sd of[-1,1]){
+  if(t===5){put(g,q.water,0x3f86c4,sd*3.3,.03,z0);const x=sd*(1.6+R()*.4),z=z0+(R()-.5)*STEP,s=.7+R()*.5;if(!md(rock,.55*s,x,z))put(g,q.rock,0x7b7d7f,x,.1,z,s);md('Lilypad',.6,sd*(2.4+R()*1.8),z0+(R()-.5)*STEP);continue;}
+  for(let k=0;k<(t===3?2:3);k++){const x=sd*(1.75+R()*(t===3?3.2:2.6)),z=z0+(R()-.5)*STEP,s=.7+R()*.6;
+   if(t===0){if(!md((k%2?'PineTree':'CommonTree')+suf+'_1',2.3*s,x,z)){put(g,q.trunk,0x5a3b22,x,.25*s,z,s);put(g,q.cone,fol,x,1.1*s,z,s);if(snow)put(g,q.cap,0xf4f8fa,x,1.4*s,z,s*.55);}}
+   else if(t===1){if(!md(snow?(k%2?'Bush_Snow_1':rock):['Grass','Flowers','Bush_1'][k],(k===2?.75:.5)*s,x,z)){put(g,q.tuft,snow?0xd3dcd9:0xb8b45a,x,.19*s,z,s);put(g,q.tuft,snow?0xc5cfcc:0x9fa24a,x+.25,.15*s,z+.2,s*.8);if(R()<.3)put(g,q.rock,0x8a8478,x-.4,.1,z,s);}}
+   else if(t===2){put(g,q.hill,snow?0xeef3f4:0x6f9a48,x*1.15,0,z,[s*1.2,s*.65,s*1.2]);if(k===1)md(snow?'Bush_Snow_1':'Bush_1',.7*s,x*1.15+sd*1.1,z+.6);}
+   else if(t===3){const m=s*.85;if(!md(k?'Mountain_Single':'MountainLarge_Single',3.4*m,x*1.35,z)){put(g,q.mount,0x7d838a,x*1.35,1.3*m,z,m);put(g,q.cap,0xf4f8fa,x*1.35,2.05*m,z,m);}}
+   else{put(g,q.disc,0x3d4a35,x,.02,z,s*.8);if(k===0&&md('Willow'+suf+'_1',2.2*s,x+sd*.6,z))continue;if(!md(k===1?'Lilypad':'Grass',.5*s,x,z))for(let j=0;j<3;j++)put(g,q.reed,0x6b7a3a,x+(R()-.5),.3*s,z+(R()-.5),s);}}}}
+function trip3dBuild(tr,season){const v=V3,G=THREE,g=v.world,q=v.geo;
+ g.children.slice().forEach(o=>{if(o.material&&!o.material.userData.shared)o.material.dispose();g.remove(o);});v.mix=[];dwarfUp();
+ v.sc.background=new G.Color(SKY[season]||0x9cc6dc);v.sc.fog=new G.Fog(SKY[season]||0x9cc6dc,14,42);v.ground.material.color.set(GCOL[season]||0x6f9d4c);
+ const cells=tr.cells.concat(tr.cur?[tr.cur]:[]),pos=Math.min(tr.len,cells.length);
+ for(let i=0;i<=tr.len;i++){const z=-i*STEP,cl=i?cells[i-1]:null,known=i===0||!!cl;
+  put(g,q.tile,i===0?0x8a7f70:cl?TCOL[cl.t]:0x6b6258,0,.125,z);
+  const ln=new G.LineSegments(q.edges,new G.LineBasicMaterial({color:i===pos?0xf3bd7d:0x2a2118}));ln.position.set(0,.125,z);g.add(ln);
+  if(i){const n=new G.Mesh(q.flat,new G.MeshBasicMaterial({map:txTex(String(i),1),transparent:true}));n.rotation.x=-Math.PI/2;n.position.set(.72,.26,z+.72);g.add(n);}
+  if(cl){decor(g,cl.t,i,season);
+   (cl.m||[]).forEach((k,j)=>{const b=BMOD[k],o=b&&inst(b[0],b[1],v.mix),zz=z-.45+j*.6;if(o){o.position.set(.62,.25+(b[2]||0),zz);if(b[2])Object.assign(o.userData,{bob:i+j,y:.25+b[2]});o.rotation.y=.6;g.add(o);return;}const sp=emo(BEMO[k]||'👹',1.05);sp.position.set(.7,.78,zz);sp.userData={bob:i+j,y:.78};g.add(sp);});
+   if(cl.p){const sp=emo('🏚️',.75);sp.position.set(-.75,.62,z-.5);g.add(sp);}
+   if(cl.e&&!(cl.m||[]).length){const sp=emo('❗',.6);sp.position.set(.75,.62,z-.5);sp.userData={bob:i,y:.62};g.add(sp);}}
+  else if(!known){const o=inst('naturaleza/Rock_1',.45);if(o){o.position.set((i%2?1:-1)*1.9,0,z+.4);g.add(o);}else put(g,q.rock,0x5d554c,(i%2?1:-1)*1.9,.1,z+.4,.6);}}
+ const tent=inst('naturaleza/Tent',1.3),fire=inst('naturaleza/Bonfire_Lit',.6);if(tent&&fire){tent.position.set(-1.9,0,.5);tent.rotation.y=.9;fire.position.set(-1.6,0,-.7);g.add(tent,fire);}else{const sp=emo('🏕️',.9);sp.position.set(-.75,.6,.3);g.add(sp);}
+ const zf=-tr.len*STEP;put(g,q.box,0x3a3633,-1.9,1.4,zf-4.8,[.9,2.8,.9]);put(g,q.box,0x3a3633,1.9,1.4,zf-4.8,[.9,2.8,.9]);put(g,q.box,0x4a4541,0,3,zf-4.8,[4.9,.6,1]);put(g,q.box,0x1d1611,0,1.25,zf-5,[2.9,2.5,.6]);
+ const mt=[['MountainLarge_Single',0,zf-15,6],['Mountain_Single',-9,zf-11,3.5],['Mountain_Single',9,zf-10,3.8]];
+ mt.forEach(([p,x,z,k])=>{const o=inst('naturaleza/'+p,2.6*k);if(o){o.position.set(x,0,z);o.rotation.y=x*.3;g.add(o);}else{put(g,q.mount,k===6?0x6f747a:0x7d838a,x,1.3*k,z,k);put(g,q.cap,0xf4f8fa,x,2.05*k,z,k);}});
+ put(g,q.box,0x5a3b22,-.95,.9,zf+.6,[.06,1.5,.06]);put(g,q.box,tr.done?0xd4a12a:0x9e2f1e,-.68,1.45,zf+.6,[.5,.32,.03]);}
+function trip3dLoop(now){const v=V3;if(!v.el||!v.el.isConnected){v.raf=0;return;}v.raf=requestAnimationFrame(trip3dLoop);const dt=Math.min(.1,v.last?(now-v.last)/1000:.016);v.last=now;v.t+=dt;
+ const el=v.el,w=el.clientWidth,h=el.clientHeight,cv=v.r.domElement;if(w&&h&&(cv.width!==Math.floor(w*v.r.getPixelRatio())||cv.height!==Math.floor(h*v.r.getPixelRatio()))){v.r.setSize(w,h,false);v.cam.aspect=w/h;v.cam.updateProjectionMatrix();}
+ const d=v.dw,dz=v.target-d.position.z,mv=Math.abs(dz)>.04,A=v.dwA;d.position.z+=dz*Math.min(1,dt*2.4);
+ if(A){const want=mv?'Walk':v.done?'Cheer':'Idle';if(A.cur!==want&&A.act[want]){A.act[A.cur]&&A.act[A.cur].fadeOut(.25);A.act[want].reset().fadeIn(.25).play();A.cur=want;}d.position.y=.25;}
+ else{d.position.y=.25+(mv?Math.abs(Math.sin(v.t*11))*.1:0);d.rotation.z=mv?Math.sin(v.t*11)*.07:Math.sin(v.t*1.5)*.02;}
+ v.mix.forEach(m=>m.update(dt));v.dmix.forEach(m=>m.update(dt));
+ v.world.children.forEach(o=>{if(o.userData.bob!=null)o.position.y=o.userData.y+Math.sin(v.t*2.2+o.userData.bob)*.07;});
+ v.look.lerp(new THREE.Vector3(0,.6,d.position.z-2),.08);v.cam.position.set(v.look.x+Math.sin(v.yaw)*v.dist,v.look.y+v.dist*.55,v.look.z+Math.cos(v.yaw)*v.dist);v.cam.lookAt(v.look);
+ v.sun.position.set(6,13,d.position.z+5);v.sun.target.position.set(0,0,d.position.z-2);v.r.render(v.sc,v.cam);}
+function trip3dSync(){const el=$('#trip3d');if(!el)return;const c=S.char,tr=c&&c.created?c.trip:null;el.hidden=!tr;if(!tr)return;
+ if(typeof THREE==='undefined'){if(!el.dataset.off){el.dataset.off=1;el.innerHTML='<div class="trip-off">No se pudo cargar el escenario 3D: la librería Three.js necesita conexión a internet.</div>';}return;}
+ try{if(!V3)trip3dInit();}catch(e){el.hidden=true;return;}
+ let snap=false;if(V3.el!==el){V3.el=el;el.innerHTML='<div class="trip-hud" id="thud"></div><div class="trip-help">Arrastra para girar la cámara</div>';el.prepend(V3.r.domElement);snap=true;}
+ const pos=Math.min(tr.len,tr.cells.length+(tr.cur?1:0)),key=JSON.stringify([tr,c.season]);
+ if(key!==V3.key){V3.key=key;trip3dBuild(tr,c.season);}V3.done=!!tr.done;
+ V3.target=-pos*STEP;if(snap||Math.abs(V3.target-V3.dw.position.z)>STEP*2.5){V3.dw.position.z=V3.target;V3.look.set(0,.6,V3.target-2);}
+ const cl=tr.cur||tr.cells[tr.cells.length-1];
+ $('#thud').innerHTML=`<span>Viaje <b>${esc(tr.name.toLowerCase())}</b></span><span>Casilla <b>${pos}</b> de ${tr.len}</span><span>${cl?TERR[cl.t]:'Inicio del camino'}</span>${tr.done?'<span>🏔️ ¡Destino alcanzado!</span>':''}`;
+ if(!V3.raf)V3.raf=requestAnimationFrame(trip3dLoop);}
+
+/* ================= DADOS 3D ================= */
+/* Animación de «Tirar por mí»: cada dado vuela girando y se detiene mostrando hacia la cámara la cara del valor ya tirado por rollParts.
+   Sin Three.js, sin WebGL o con «reducir movimiento» se omite y el resultado se aplica al instante. Un clic en el tapete la salta. */
+let D3=null;const DGEO={};
+function dieGeo(s){if(DGEO[s])return DGEO[s];const G=THREE;let g;
+ if(s===4)g=new G.TetrahedronGeometry(1.25);else if(s===6)g=new G.BoxGeometry(1.35,1.35,1.35);else if(s===8)g=new G.OctahedronGeometry(1.15);else if(s===12)g=new G.DodecahedronGeometry(1.1);else if(s===20)g=new G.IcosahedronGeometry(1.15);
+ else{const V=[];for(let i=0;i<10;i++){const b=i*Math.PI/5;V.push([Math.cos(b),Math.sin(b),.105*(i%2?1:-1)]);}V.push([0,0,-1],[0,0,1]);const t=[],m=i=>(i+10)%10;
+  for(let i=0;i<10;i+=2)t.push(11,m(i-1),i,11,i,m(i+1));for(let j=1;j<10;j+=2)t.push(10,j,m(j-1),10,m(j+1),j);
+  g=new G.BufferGeometry();g.setAttribute('position',new G.Float32BufferAttribute(t.flatMap(k=>V[k].map(c=>c*1.15)),3));}
+ g=g.index?g.toNonIndexed():g;g.computeVertexNormals();
+ const p=g.attributes.position,fs=[],a=new G.Vector3(),b=new G.Vector3(),c=new G.Vector3();
+ for(let i=0;i<p.count;i+=3){a.fromBufferAttribute(p,i);b.fromBufferAttribute(p,i+1);c.fromBufferAttribute(p,i+2);const n=new G.Vector3().subVectors(b,a).cross(new G.Vector3().subVectors(c,a)).normalize();
+  let f=fs.find(f=>f.n0.dot(n)>.9);if(!f)fs.push(f={n0:n.clone(),n:new G.Vector3(),pts:{}});f.n.add(n);[a,b,c].forEach(v=>f.pts[v.toArray().map(x=>x.toFixed(3)).join()]=v.clone());}
+ fs.forEach(f=>{f.n.normalize();const v=Object.values(f.pts);f.c=v.reduce((s,x)=>s.add(x),new G.Vector3()).divideScalar(v.length);});
+ return DGEO[s]={g,fs};}
+function dieLabels(d){return d.s===10&&d.tens?[...Array(10)].map((_,i)=>[i*10,i?String(i*10):'00']):d.s===10&&d.zero?[...Array(10)].map((_,i)=>[i,String(i)]):[...Array(d.s)].map((_,i)=>[i+1,String(i+1)]);}
+function dieTex(t,dark){const k='d'+(dark?1:0)+t;if(TEXC[k])return TEXC[k];const cv=document.createElement('canvas');cv.width=cv.height=128;const x=cv.getContext('2d');x.textAlign='center';x.textBaseline='middle';x.fillStyle=dark?'#2a1f16':'#fff6e6';
+ x.font=`bold ${t.length>1?62:80}px Cinzel, Georgia, serif`;x.fillText(t,64,66);if(t==='6'||t==='9')x.fillRect(40,104,48,7);return TEXC[k]=new THREE.CanvasTexture(cv);}
+function dieMesh(d){const G=THREE,D=dieGeo(d.s),{g,fs}=D,w=new G.Group(),alt=d.tens,lab=dieLabels(d),sz={4:.66,6:.9,8:.66,10:.6,12:.66,20:.56}[d.s],pg=D.pg||(D.pg=new G.PlaneGeometry(sz,sz)),mk='die'+(alt?1:0);
+ w.add(new G.Mesh(g,MATC[mk]||(MATC[mk]=new G.MeshStandardMaterial({color:alt?0x9e2f1e:0xf1e4c6,flatShading:true,roughness:.45,metalness:.05}))));let face=0;
+ fs.forEach((f,i)=>{const l=lab[i%lab.length],tk='lab'+l[1]+(alt?'a':''),pl=new G.Mesh(pg,MATC[tk]||(MATC[tk]=new G.MeshBasicMaterial({map:dieTex(l[1],!alt),transparent:true,depthWrite:false})));
+  pl.position.copy(f.c).addScaledVector(f.n,.015);pl.lookAt(pl.position.clone().add(f.n));w.add(pl);if(l[0]===d.v){face=i;w.userData.up=new G.Vector3(0,1,0).applyQuaternion(pl.quaternion);}});
+ w.userData.n=fs[face].n.clone();w.children.forEach(o=>o.castShadow=true);return w;}
+function diceInit(){const G=THREE,el=document.createElement('div');el.className='dice3d';el.hidden=true;el.innerHTML='<div class="dice-box"><canvas></canvas><div class="dice-res"></div></div>';document.body.appendChild(el);
+ const r=new G.WebGLRenderer({canvas:el.querySelector('canvas'),antialias:true,alpha:true});r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));r.shadowMap.enabled=true;
+ const sc=new G.Scene(),cam=new G.PerspectiveCamera(36,1.5,.1,100),sun=new G.DirectionalLight(0xfff1d6,.9);cam.position.set(0,7.2,6.6);cam.lookAt(0,0,0);
+ sc.add(new G.HemisphereLight(0xf4efe4,0x2a1f16,.75));sun.position.set(3,10,5);sun.castShadow=true;Object.assign(sun.shadow.camera,{left:-8,right:8,top:8,bottom:-8});sc.add(sun);
+ const felt=new G.Mesh(new G.PlaneGeometry(60,60),new G.MeshStandardMaterial({color:0x234a33,roughness:1}));felt.rotation.x=-Math.PI/2;felt.receiveShadow=true;sc.fog=new G.Fog(0x142a1e,14,30);sc.add(felt);
+ D3={el,r,sc,cam,dice:[],raf:0,fin:null};el.onclick=()=>{if(D3.fin)D3.fin();};}
+function diceAnim(P,done){const rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(typeof THREE==='undefined'||rm)return done();
+ try{if(!D3)diceInit();}catch(e){return done();}
+ const G=THREE,v=D3,n=P.dice.length,gap=n>3?2.1:2.6;v.dice.forEach(o=>v.sc.remove(o));v.el.hidden=false;
+ const cv=v.r.domElement,w=cv.clientWidth||360,h=cv.clientHeight||240;v.r.setSize(w,h,false);v.cam.aspect=w/h;v.cam.position.set(0,7.2,6.6).multiplyScalar(n>2?1.3:1);v.cam.lookAt(0,0,0);v.cam.updateProjectionMatrix();
+ const cu=new G.Vector3(0,1,0).applyQuaternion(v.cam.quaternion);
+ v.dice=P.dice.map((d,i)=>{const o=dieMesh(d),tp=new G.Vector3((i-(n-1)/2)*gap,1.05,0),cd=v.cam.position.clone().add(new G.Vector3(2.4,2.6,0)).sub(tp).normalize();
+  const q=new G.Quaternion().setFromUnitVectors(o.userData.n,cd),up=o.userData.up.clone().applyQuaternion(q),pr=x=>x.sub(cd.clone().multiplyScalar(x.dot(cd))).normalize(),tu=pr(cu.clone()),u2=pr(up);
+  let ang=Math.acos(clamp(u2.dot(tu),-1,1));if(new G.Vector3().crossVectors(u2,tu).dot(cd)<0)ang=-ang;
+  Object.assign(o.userData,{qf:new G.Quaternion().setFromAxisAngle(cd,ang).multiply(q),tp,sp:new G.Vector3(6+Math.random()*2,3+Math.random()*2,-2+Math.random()*4),ax:new G.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize(),k:Math.PI*(4+Math.random()*3),dl:i*.08});
+  v.sc.add(o);return o;});
+ const res=v.el.querySelector('.dice-res'),parts=P.dice.map(d=>d.tens&&d.s===10?(d.v?d.v:'00'):d.v);res.textContent='';
+ const T=1.25,t0=performance.now();let over=false;
+ const fin=()=>{if(over)return;over=true;cancelAnimationFrame(v.raf);v.fin=null;v.el.hidden=true;done();};
+ const step=now=>{const t=(now-t0)/1000;let all=true;
+  v.dice.forEach(o=>{const u=o.userData,e0=clamp((t-u.dl)/T,0,1),e=1-Math.pow(1-e0,3);if(e0<1)all=false;
+   o.position.lerpVectors(u.sp,u.tp,e);o.position.y+=2.4*(1-e)*Math.abs(Math.sin(e*Math.PI*2.5));o.quaternion.setFromAxisAngle(u.ax,u.k*(1-e)).multiply(u.qf);});
+  v.r.render(v.sc,v.cam);
+  if(all&&!res.textContent){res.textContent=`🎲 ${n>1?parts.join(P.dice[0].tens?' y ':' + ')+' → ':''}${P.v}`;v.fin=fin;setTimeout(fin,900);}
+  if(!over)v.raf=requestAnimationFrame(step);};
+ v.fin=fin;v.raf=requestAnimationFrame(step);}
+
 /* ================= VISTAS ================= */
 function renderStatus(){const el=$('#status'),rc=$('#recent'),c=S.char;
  if(el){if(!c||!c.created)el.innerHTML='';else{const pill=(i,k,v)=>`<span class="pill">${i}<button data-k="${k}" data-d="-1" aria-label="menos">−</button><b>${v}</b><button data-k="${k}" data-d="1" aria-label="más">+</button></span>`;
@@ -795,14 +982,15 @@ function renderStatus(){const el=$('#status'),rc=$('#recent'),c=S.char;
   <div class="pills">${pill('❤️','hp',`${c.hp}/${c.hpMax}`)}${pill('🍖','rations',c.rations)}${pill('🍄','mushrooms',c.mushrooms)}${pill('🍺','merriment',c.merriment)}${pill('🪙','gold',c.gold)}</div>
   ${flags.length||(c.hungry&&c.rations)?`<div class="flags">${flags.map(f=>`<span class="flag">${f}</span>`).join('')}${c.hungry&&c.rations?'<button class="flag eat" data-act="eat">🍖 Comer ración</button>':''}</div>`:''}
   <div class="mods">FUE ${fmt(c.str)} · DES ${fmt(c.dex-c.dexPen)} · CON ${fmt(c.con)} · PRE ${fmt(c.pre)} · Armadura −${c.armorRed} · ${esc(c.weapon.n)} ${c.weapon.die}${c.weapon.plus?'+'+c.weapon.plus:''}</div>`;}}
+ trip3dSync();
  if(rc)rc.innerHTML=S.log.slice(-6).reverse().map(l=>`<li><small>Día ${l.d} · ${esc(l.t)}</small><br>${esc(l.x)}</li>`).join('')||'<li>Aún no hay tiradas.</li>';}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-k]');const c=S.char;
  if(b&&c){const k=b.dataset.k,d=+b.dataset.d,max={hp:c.hpMax,mushrooms:maxMush(),merriment:3}[k]??99999;c[k]=clamp(c[k]+d,0,max);if(k==='rations'&&d<0&&c.rations>=0)c.hungry=false;save();return;}
  const a=e.target.closest('[data-act="eat"]');if(a&&c&&c.rations>0){c.rations--;c.hungry=false;log('Ración','Comes una ración');}
  const g=e.target.closest('[data-go]');if(g)go(g.dataset.go);});
 function restartAdventure(){const c=S.char;if(!c||!c.created||c.dead)return;
- if(!confirm(`¿Reiniciar la aventura de ${c.name||'tu enano'}? Se conservarán el personaje, nivel, equipo y recursos. Se reiniciarán el día, estación, terreno, hexágonos y bitácora.`))return;
- c.day=1;c.hexes=0;c.season=null;c.terrain=null;c.dayMods={};c.nextMods={};c.nextHalf=false;
+ if(!confirm(`¿Reiniciar la aventura de ${c.name||'tu enano'}? Se conservarán el personaje, nivel, equipo y recursos. Se reiniciarán el día, estación, terreno, viaje, hexágonos y bitácora.`))return;
+ c.day=1;c.hexes=0;c.season=null;c.terrain=null;c.trip=null;c.dayMods={};c.nextMods={};c.nextHalf=false;
  S.turn={phase:'dayStart'};S.log=[];S.view='turn';CURS={create:null,turn:null};K=null;G=null;save();render();}
 function homeView(m){const c=S.char;
  m.innerHTML=`<div class="card"><h3>Bienvenido, viajero</h3><p>Esta guía acompaña tus partidas de <b>DWARF</b>, el juego de rol solitario sobre el largo viaje de regreso a casa.</p>
@@ -840,7 +1028,7 @@ function logView(m){m.innerHTML=`<div class="card"><h3>Bitácora</h3><p class="h
 function download(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();}
 function render(){document.body.dataset.view=S.view;document.body.dataset.season=ch()?.season||'';document.querySelectorAll('nav button').forEach(b=>{const active=b.dataset.v===S.view;b.classList.toggle('on',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});const m=$('#app');
  if(S.view==='create'){m.innerHTML='<div id="status" class="status"></div><div id="stage"></div>';renderStatus();if(CURS.create)return replay(CURS.create);if(S.char&&S.char.created)return createdSummary();return createIntro();}
- if(S.view==='turn'){m.innerHTML=`<div id="status" class="status"></div><div id="stage"></div>${toolsHTML()}<div class="card dark"><h4>Últimas tiradas</h4><ul class="log" id="recent"></ul></div>`;bindTools();renderStatus();
+ if(S.view==='turn'){m.innerHTML=`<div id="status" class="status"></div><div id="trip3d" class="trip3d" hidden></div><div id="stage"></div>${toolsHTML()}<div class="card dark"><h4>Últimas tiradas</h4><ul class="log" id="recent"></ul></div>`;bindTools();renderStatus();
   if(!S.char||!S.char.created||!S.turn)return turnForm();if(CURS.turn)return replay(CURS.turn);return resumeTurn();}
  if(S.view==='sheet')return sheetView(m);if(S.view==='log')return logView(m);return homeView(m);}
 function go(v){S.view=v;save();render();try{window.scrollTo(0,0);}catch(e){}}
