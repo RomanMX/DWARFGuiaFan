@@ -14,7 +14,6 @@ Los modelos se optimizaron con [glTF-Transform](https://gltf-transform.dev/): se
 | `personajes/Rogue_Hooded.glb` | Adventurers 1.0 | Bandido, cultista |
 | `personajes/Skeleton_Minion.glb` | [KayKit Character Pack: Skeletons 1.0](https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0) | Esqueleto |
 | `personajes/Skeleton_Warrior.glb` | Skeletons 1.0 | Guerrero esqueleto |
-| `personajes/Skeleton_Mage.glb` | Skeletons 1.0 | Espectro |
 
 ## Quaternius ([quaternius.com](https://quaternius.com))
 
@@ -30,4 +29,25 @@ Descargados del espejo [quaternius-showcase](https://github.com/trebeljahr/quate
 | `naturaleza/Bonfire_Lit.glb` | [Medieval Village Pack](https://quaternius.com/packs/medievalvillage.html) | Hoguera del inicio del camino |
 | `naturaleza/Tent.glb` | [Survival Pack](https://quaternius.com/packs/survival.html) | Tienda del inicio del camino |
 
-Las criaturas del bestiario sin modelo (oso, jabalí, goblin, orco, trol, dragón, etc.) se siguen mostrando con emoji.
+### Ultimate Monsters (Quaternius)
+
+Descargado de la página oficial del pack, [quaternius.com/packs/ultimatemonsters.html](https://quaternius.com/packs/ultimatemonsters.html) (enlace a Google Drive), con licencia CC0 según su `License.txt`. Se convirtió de `.gltf` a `.glb` conservando solo la animación de reposo (`Idle` o `Flying_Idle`, renombrada a `Idle`).
+
+| Archivo (`criaturas/`) | Modelo original | Uso en la guía |
+|---|---|---|
+| `Orc.glb` | Big/Orc | Orco |
+| `Monkroose.glb` | Big/Monkroose | Goblin |
+| `BlueDemon.glb` | Big/BlueDemon | Trol |
+| `Tribal.glb` | Big/Tribal | Ogro |
+| `Yeti.glb` | Big/Yeti | Gigante |
+| `Orc_Skull.glb` | Big/Orc_Skull | Zombi |
+| `Demon.glb` | Big/Demon | Vampiro |
+| `Alien.glb` | Big/Alien | Criatura genérica |
+| `Flying_Dragon_Evolved.glb` | Flying/Dragon_Evolved | Dragón |
+| `Flying_Dragon.glb` | Flying/Dragon | Hidra |
+| `Flying_Goleling.glb` | Flying/Goleling | Murciélagos |
+| `Flying_Demon.glb` | Flying/Demon | Engendro vampírico |
+| `Flying_Ghost_Skull.glb` | Flying/Ghost_Skull | Espectro |
+| `Flying_Squidle.glb` | Flying/Squidle | Hada |
+
+Las criaturas del bestiario sin modelo (oso, jabalí, puma y momia) se siguen mostrando con emoji.
