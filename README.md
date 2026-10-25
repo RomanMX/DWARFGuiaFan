@@ -13,6 +13,7 @@ Puedes tirar tus dados reales o pulsar «Tirar por mí». La partida se guarda e
 ## Notas
 
 - La guía está en un único archivo HTML; las imágenes de fondo están en `imagenes/` y las dependencias externas son Google Fonts y Three.js (escenario 3D).
+- Los personajes, criaturas y la vegetación del escenario 3D son modelos CC0 de [KayKit](https://www.kaylousberg.com) y [Quaternius](https://quaternius.com) (detalle en `modelos/LICENCIAS.md`). Para verlos hay que servir la carpeta (p. ej. `python -m http.server`); abriendo `index.html` directamente se muestran figuras simples.
 - Tabla de Tesoro: el manual lista 11–17 y 17–19; aquí se usa 11–16 / 17–19.
 - Guía de ayuda no oficial. DWARF © Tavern Lore, publicado bajo la Licencia de Terceros de MÖRK BORG. Necesitas el manual del juego.
 
