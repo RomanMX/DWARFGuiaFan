@@ -8,7 +8,7 @@ Guía web no oficial, en español, para **DWARF** (juego de rol solitario de Tav
 
 ## Ejecución y desarrollo
 
-No hay compilación, gestor de paquetes, linter ni tests. Toda la aplicación es `index.html` (`<style>` y `<script>` en línea): basta con abrirlo en el navegador o servir la carpeta de forma estática (p. ej. `python -m http.server`) para que carguen los fondos de `imagenes/`. Google Fonts es la única dependencia externa. Los cambios se verifican manualmente en el navegador.
+No hay compilación, gestor de paquetes, linter ni tests. Toda la aplicación es `index.html` (`<style>` y `<script>` en línea): basta con abrirlo en el navegador o servir la carpeta de forma estática (p. ej. `python -m http.server`) para que carguen los fondos de `imagenes/`. Las dependencias externas son Google Fonts y Three.js r128 (cdnjs, para el escenario 3D del viaje; sin conexión la guía funciona igual y el escenario muestra un aviso). Los cambios se verifican manualmente en el navegador.
 
 ## Referencia de reglas
 
@@ -27,6 +27,8 @@ El estilo del código es denso, en líneas largas casi minificadas; hay que resp
   - `askNum` y `askText` para entrada libre. `o.table` es la etiqueta «Tabla consultada»; `tbl(filas, resaltada)` y `nrows(arr)` generan las tablas.
   - Cada paso se registra con `setCur(...)` en `CURS[S.view]` para que `render()` pueda reproducirlo con `replay()` al volver a la vista. Las funciones suelen recibir un callback `next`/`back`/`after` para continuar.
 - **Creación de personaje**: `createIntro` → `cBg` → `cName` → `cTrait` → `cAttr(i)` → `cHP` → `cGold` → `cArmor` → `cWeapon` → `cSupplies` → `cSeason` → `cTerrain` → `cDone`.
+- **Viaje**: `c.trip = {name, len, cells, cur, day0, done}`. `dayStart` pide el tipo con `chooseTrip` (`TRIPS`: Corto 8, Medio 14, Largo 20 casillas) si no hay viaje o el anterior terminó. `dHex` fija `trip.cur` con el terreno (`tripEnter`), `tripMark` anota POI, encuentros y monstruos combatidos en la casilla actual y `finishHex` la pasa a `trip.cells`; al llegar a `len` marca `done` y corta los hexágonos del día. `dPlan` limita el avance a las casillas restantes.
+- **Escenario 3D** (sección `ESCENARIO 3D DEL VIAJE`): `trip3dSync()` se llama desde `renderStatus()` (es decir, en cada `save()`), monta el lienzo en `#trip3d` de la vista de turnos y reconstruye la escena solo si cambian el viaje o la estación. Globales transitorias `V3` (renderer, escena, enano) y cachés `MATC`/`TEXC`. Terrenos con primitivas low-poly (`decor`, colores `TCOL`), monstruos como sprites emoji (`BEMO`: al añadir una criatura a `BEAST`, añade también su emoji).
 - **Turno diario**: `dayStart` → `dWeather` → `dRation` (o `dCave`) → `dPlan` → por hexágono `dHex` → `dPOI` → `dEnc` → `finishHex` → `forageMenu` (forrajear/cazar/pescar) → `campMenu` → `nightEnc` → `sleep`/`dawn`. `S.turn.phase` guarda el progreso; `resumeTurn()` traduce la fase a su función tras recargar.
 - **Encuentros → combate**: `encounterResult`/`poiResult` analizan el texto con `detect()`, que usa `KW` (palabra clave en español → clave de `BEAST`) para ofrecer combate vía `combatSetup`/`startCombat`. Al añadir una criatura, añade tanto la entrada en `BEAST` como su palabra clave en `KW` (el orden importa: primero las frases más específicas).
 - **Herramientas** (`TOOLS` + `toolsHTML()`): oráculo, pruebas, reacción y generador de PNJ, rumor, combate, mazmorra, tesoro y asentamiento; disponibles en cualquier momento desde la vista de turnos.
